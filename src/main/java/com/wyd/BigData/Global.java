@@ -7,6 +7,7 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 public class Global {
 	public PropertiesConfiguration config;
 	private JavaStreamingContext ssc;
+
 	public Global() {
 		try {
 			config = new PropertiesConfiguration();
@@ -21,7 +22,11 @@ public class Global {
 
 	public static Global getInstance() {
 		if (instance == null) {
-			instance = new Global();
+			synchronized (Global.class) {
+				if (instance == null) {
+					instance = new Global();
+				}
+			}
 		}
 		return instance;
 	}
@@ -41,6 +46,5 @@ public class Global {
 	public void setSsc(JavaStreamingContext ssc) {
 		this.ssc = ssc;
 	}
-	
 
 }
