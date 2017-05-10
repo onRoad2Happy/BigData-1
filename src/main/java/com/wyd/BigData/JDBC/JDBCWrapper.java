@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.configuration.PropertiesConfiguration;
+
+import com.wyd.BigData.Global;
+
 public class JDBCWrapper {
 	private static JDBCWrapper instance = null;
 	private static LinkedBlockingQueue<Connection> connPool = new LinkedBlockingQueue<>();
@@ -22,10 +26,12 @@ public class JDBCWrapper {
 	}
 
 	public JDBCWrapper() {
+		PropertiesConfiguration config = Global.getInstance().config;
+		String url =config.getString("jdbc.url");
 		for (int i = 0; i < 10; i++) {
 			Connection conn;
 			try {
-				conn = DriverManager.getConnection("jdbc:mysql://192.168.3.30/test?user=root&password=123456&useUnicode=true&characterEncoding=UTF8");
+				conn = DriverManager.getConnection(url);
 				connPool.put(conn);
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -65,31 +71,60 @@ public class JDBCWrapper {
 		}
 		return conn;
 	}
+	public boolean executeSQL(String sql){
+		boolean result =false;
+		Connection conn = null;
+		PreparedStatement statement = null;
+		try {
+			conn = getConnction();			
+			statement = conn.prepareStatement(sql);
+			result = statement.execute();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (statement != null) {
+				try {
+					statement.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			if (conn != null) {
+				try {
+					connPool.put(conn);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return result;
+	}
 	/**
 	 * 批量提交
 	 */
 	public int[] doBatch(String sql, List<Object[]> paramsList) {
 		Connection conn = null;
 		int[] result = null;
-		PreparedStatement pst = null;
+		PreparedStatement statement = null;
 		try {
 			conn = getConnction();
 			conn.setAutoCommit(false);
-			pst = conn.prepareStatement(sql);
+			statement = conn.prepareStatement(sql);
 			for (Object[] params : paramsList) {
 				for (int i = 0; i < params.length; i++) {
-					pst.setObject(i + 1, params[i]);
+					statement.setObject(i + 1, params[i]);
 				}
-				pst.addBatch();
+				statement.addBatch();
 			}
-			result = pst.executeBatch();
+			result = statement.executeBatch();
 			conn.commit();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (pst != null) {
+			if (statement != null) {
 				try {
-					pst.close();
+					statement.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -113,21 +148,21 @@ public class JDBCWrapper {
 	 */
 	public void doQuery(String sql, Object[] params, ExecuteCallBack callBack) {
 		Connection conn = null;		
-		PreparedStatement pst = null;
+		PreparedStatement statement = null;
 		try {
 			conn = getConnction();
-			pst = conn.prepareStatement(sql);
+			statement = conn.prepareStatement(sql);
 
 			for (int i = 0; i < params.length; i++) {
-				pst.setObject(i + 1, params[i]);
+				statement.setObject(i + 1, params[i]);
 			}
-			callBack.call(pst.executeQuery());
+			callBack.call(statement.executeQuery());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (pst != null) {
+			if (statement != null) {
 				try {
-					pst.close();
+					statement.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -147,10 +182,10 @@ public class JDBCWrapper {
 		List<Object[]> paramsList = new ArrayList<>();
 		paramsList.add(new Object[]{"spark"});
 		paramsList.add(new Object[]{"scala"});
-		jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
+		//jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
 		paramsList.clear();
 		paramsList.add(new Object[]{"java",1});
-		jdbcw.doBatch("UPDATE tab_user set name=? where id=?", paramsList);
+		//jdbcw.doBatch("UPDATE tab_user set name=? where id=?", paramsList);
 		jdbcw.doQuery("select * from tab_user", new Object[]{}, new ExecuteCallBack() {
 			@Override
 			public void call(ResultSet rs) {				
@@ -166,5 +201,7 @@ public class JDBCWrapper {
 		for(String n:names){
 			System.out.println(n);
 		}
+		//jdbcw.executeSQL("create table tab_log(id int)");
+		
 	}
 }
