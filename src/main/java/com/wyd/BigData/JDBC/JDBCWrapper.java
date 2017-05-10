@@ -182,10 +182,10 @@ public class JDBCWrapper {
 		List<Object[]> paramsList = new ArrayList<>();
 		paramsList.add(new Object[]{"spark"});
 		paramsList.add(new Object[]{"scala"});
-		//jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
+		jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
 		paramsList.clear();
-		paramsList.add(new Object[]{"java",1});
-		//jdbcw.doBatch("UPDATE tab_user set name=? where id=?", paramsList);
+		paramsList.add(new Object[]{"java","scala"});
+		jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
 		jdbcw.doQuery("select * from tab_user", new Object[]{}, new ExecuteCallBack() {
 			@Override
 			public void call(ResultSet rs) {				
@@ -201,7 +201,7 @@ public class JDBCWrapper {
 		for(String n:names){
 			System.out.println(n);
 		}
-		//jdbcw.executeSQL("create table tab_log(id int)");
+		//jdbcw.executeSQL("delete from tab_user");
 		
 	}
 }

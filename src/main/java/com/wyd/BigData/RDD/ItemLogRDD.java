@@ -28,6 +28,7 @@ public class ItemLogRDD implements Serializable {
 
 	@SuppressWarnings("serial")
 	public static void call(JavaRDD<SparkFlumeEvent> rdd, SparkSession spark) {
+		if(rdd.count()==0) return;
 		ItemLogRDD ldd = new ItemLogRDD();
 		JavaRDD<SparkFlumeEvent> filterRdd = ldd.filter(rdd);
 		JavaRDD<Row> rowRDD = filterRdd.map(new Function<SparkFlumeEvent, Row>() {

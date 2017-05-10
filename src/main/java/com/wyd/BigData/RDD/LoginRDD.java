@@ -2,11 +2,13 @@ package com.wyd.BigData.RDD;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -31,6 +33,8 @@ public class LoginRDD implements Serializable {
 
 	@SuppressWarnings("serial")
 	public static void call(JavaRDD<SparkFlumeEvent> rdd, SparkSession spark) {
+		//rdd.foreachPartition(f);
+		if(rdd.count()==0)return;
 		LoginRDD ldd = new LoginRDD();
 		JavaRDD<SparkFlumeEvent> filterRdd = ldd.filter(rdd);
 		JavaRDD<Row> rowRDD = filterRdd.map(new Function<SparkFlumeEvent, Row>() {
@@ -42,15 +46,23 @@ public class LoginRDD implements Serializable {
 						Integer.valueOf(parts[5]));
 			}
 		});
+//		rowRDD.foreachPartition(new VoidFunction<Iterator<Row>>() {
+//			
+//			@Override
+//			public void call(Iterator<Row> t) throws Exception {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//		});
+		if(rowRDD.count()==0)return;
 		StructType schema = ldd.createStruct();
 		// 创建一个DataFrame并去重
-		Dataset<Row> dataFrame = spark.createDataFrame(rowRDD, schema).distinct();
-		if (dataFrame.count() > 0) {
-			dataFrame.createOrReplaceTempView("tmp_login");
-			String tableName = "tab_login_" + sf.format(Calendar.getInstance().getTime());
-			ldd.createTable(spark, tableName);
-			spark.sql("INSERT INTO " + tableName + " select server_id,channel_id,player_id from tmp_login");
-		}
+		Dataset<Row> dataFrame = spark.createDataFrame(rowRDD, schema).distinct();		
+		dataFrame.createOrReplaceTempView("tmp_login");
+		String tableName = "tab_login_" + sf.format(Calendar.getInstance().getTime());
+		ldd.createTable(spark, tableName);
+		spark.sql("INSERT INTO " + tableName + " select server_id,channel_id,player_id from tmp_login");
+		
 	}
 
 	private void createTable(SparkSession spark, String tableName) {

@@ -48,14 +48,15 @@ public class App {
 				ItemLogRDD.call(rdd, spark);
 			}
 		});
+		
 		ssc.start();
 		ssc.awaitTermination();
 	}
 
 	public static void main(String[] args) {
 		try {		
-			Thread t = new Thread(new TaskThread());
-			t.start();
+//			Thread t = new Thread(new TaskThread());
+//			t.start();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				@Override
 				public void run() {
