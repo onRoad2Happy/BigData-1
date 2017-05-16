@@ -14,7 +14,6 @@ import org.apache.spark.api.java.Optional;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.VoidFunction;
-import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
@@ -22,7 +21,6 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
-import com.wyd.BigData.Global;
 import com.wyd.BigData.bean.LoginSumInfo;
 import com.wyd.BigData.dao.BaseDao;
 import scala.Tuple2;
@@ -35,10 +33,9 @@ public class LoginRDD implements Serializable {
     private static final Pattern SPACE            = Pattern.compile("\t");
 
     @SuppressWarnings("serial")
-    public static void call(JavaRDD<SparkFlumeEvent> rdd, SparkSession spark) {
-        if (rdd.count() == 0) return;        
-        LoginRDD ldd = new LoginRDD();
-        JavaRDD<SparkFlumeEvent> loingRDD = ldd.filter(rdd);
+    public  void call(JavaRDD<SparkFlumeEvent> rdd, SparkSession spark) {
+        if (rdd.count() == 0) return;
+        JavaRDD<SparkFlumeEvent> loingRDD = filter(rdd);
         LogLog.error("count1=====" + loingRDD.count());
         // 数据源去重
         JavaRDD<Row> loingRowRDD = loingRDD.map(new Function<SparkFlumeEvent, Row>() {
@@ -52,7 +49,7 @@ public class LoginRDD implements Serializable {
         LogLog.error("count2=====" + loingRowRDD.count());
         final String today = sf.format(Calendar.getInstance().getTime());
         // 查询数据库
-        BaseDao dao = new BaseDao();
+        BaseDao dao = BaseDao.getInstance();
         List<LoginSumInfo> loginInfoFromDBList = dao.getAllLoginSumInfo(today);
         if (loginInfoFromDBList.size() > 0) {
             // 把登陆表里的所有数据查出变成RDD，格式是KEY：playerId,Value:true
@@ -75,10 +72,6 @@ public class LoginRDD implements Serializable {
                 @Override
                 public Boolean call(Tuple2<Integer, Tuple2<Row, Optional<Boolean>>> v1) throws Exception {
                     Optional<Boolean> optional = v1._2._2;
-//                    if( optional.isPresent() && optional.get()){
-//                        return false;
-//                    }
-//                    return true;
                     return  !optional.isPresent() || !optional.get();
                 }
             });
@@ -94,7 +87,7 @@ public class LoginRDD implements Serializable {
             rdd2filtered.foreachPartition(new VoidFunction<Iterator<Tuple2<Integer, Row>>>() {
                 @Override
                 public void call(Iterator<Tuple2<Integer, Row>> t) throws Exception {
-                    BaseDao dao = new BaseDao();
+                    BaseDao dao = BaseDao.getInstance();
                     Row data;
                     List<LoginSumInfo> loginList = new ArrayList<>();
                     while (t.hasNext()) {
@@ -108,7 +101,7 @@ public class LoginRDD implements Serializable {
             loingRowRDD.foreachPartition(new VoidFunction<Iterator<Row>>() {
                 @Override
                 public void call(Iterator<Row> r) throws Exception {
-                    BaseDao dao = new BaseDao();
+                    BaseDao dao = BaseDao.getInstance();
                     Row data;
                     List<LoginSumInfo> loginList = new ArrayList<>();
                     while (r.hasNext()) {
@@ -120,58 +113,16 @@ public class LoginRDD implements Serializable {
             });
         }
     }
-    // public static void call(JavaRDD<SparkFlumeEvent> rdd, SparkSession spark) {
-    // //rdd.foreachPartition(f);
-    // if(rdd.count()==0)return;
-    // LoginRDD ldd = new LoginRDD();
-    // JavaRDD<SparkFlumeEvent> filterRdd = ldd.filter(rdd);
-    // JavaRDD<Row> rowRDD = filterRdd.map(new Function<SparkFlumeEvent, Row>() {
-    // @Override
-    // public Row call(SparkFlumeEvent flume) throws Exception {
-    // String line = new String(flume.event().getBody().array());
-    // String[] parts = SPACE.split(line);
-    // return RowFactory.create(Integer.valueOf(parts[2]), Integer.valueOf(parts[3]),
-    // Integer.valueOf(parts[5]));
-    // }
-    // });
-    //
-    // if(rowRDD.count()==0)return;
-    // StructType schema = ldd.createStruct();
-    // // 创建一个DataFrame并去重
-    // Dataset<Row> dataFrame = spark.createDataFrame(rowRDD, schema).distinct();
-    // dataFrame.createOrReplaceTempView("tmp_login");
-    // String tableName = "tab_login_" + sf.format(Calendar.getInstance().getTime());
-    // ldd.createTable(spark, tableName);
-    // spark.sql("INSERT INTO " + tableName + " select server_id,channel_id,player_id from tmp_login");
-    //
-    // }
+    
 
     private void createTable(SparkSession spark, String tableName) {
         spark.sql("CREATE TABLE IF NOT EXISTS " + tableName + " (server_id INT,channel_id INT, player_id INT)");
     }
 
-    /**
-     * 昨天登陆玩家数据去重
-     */
-    public static void distinct() {
-        // System.out.println("====================distinct===============");
-        LoginRDD ldd = new LoginRDD();
-        SparkSession spark = SparkSession.builder().appName("distinct login table").config("hive.metastore.uris", Global.getInstance().config.getString("metastore")).enableHiveSupport().getOrCreate();
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, -1);
-        String day = sf.format(cal.getTime());
-        String tableName = "tab_login_" + day;
-        Dataset<Row> dataFrame = spark.sql("select * from tab_task where type=1 and time='" + day + "'");
-        // System.out.println("====================dataFrame.count()===============:"+dataFrame.count());
-        if (dataFrame.count() == 0) {
-            spark.sql("insert into tab_task values(1,'" + day + "')");
-            ldd.createTable(spark, tableName);
-            spark.sql("INSERT OVERWRITE TABLE " + tableName + " select distinct server_id,channel_id,player_id from " + tableName);
-        }
-    }
+    
 
     @SuppressWarnings("serial")
-    public JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
+    private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
         return rdd.filter(new Function<SparkFlumeEvent, Boolean>() {
             @Override
             public Boolean call(SparkFlumeEvent flume) throws Exception {

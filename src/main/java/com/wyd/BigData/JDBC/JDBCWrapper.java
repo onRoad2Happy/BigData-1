@@ -1,4 +1,5 @@
 package com.wyd.BigData.JDBC;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,7 +10,11 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import com.wyd.BigData.Global;
-public class JDBCWrapper {
+public class JDBCWrapper implements Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6876426193742259377L;
     private static JDBCWrapper                     instance = null;
     private static LinkedBlockingQueue<Connection> connPool = new LinkedBlockingQueue<>();
 
@@ -24,7 +29,7 @@ public class JDBCWrapper {
     public JDBCWrapper() {
         PropertiesConfiguration config = Global.getInstance().config;
         String url = config.getString("jdbc.url");
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 2; i++) {
             Connection conn;
             try {
                 conn = DriverManager.getConnection(url);
@@ -99,21 +104,25 @@ public class JDBCWrapper {
      * 批量提交
      */
     public int[] doBatch(String sql, List<Object[]> paramsList) {
+        
         Connection conn = null;
         int[] result = null;
+        if (paramsList == null || paramsList.size()==0) {
+            return result;
+        }
         PreparedStatement statement = null;
         try {
             conn = getConnction();
             conn.setAutoCommit(false);
             statement = conn.prepareStatement(sql);
-            if (paramsList != null) {
+            
                 for (Object[] params : paramsList) {
                     for (int i = 0; i < params.length; i++) {
                         statement.setObject(i + 1, params[i]);
                     }
                     statement.addBatch();
                 }
-            }
+            
             result = statement.executeBatch();
             conn.commit();
         } catch (Exception e) {
