@@ -59,7 +59,7 @@ public class JDBCWrapper implements Serializable {
     }
 
     public Connection getConnction() throws Exception {
-        //System.out.println("connPool:" + connPool.size());
+        // System.out.println("connPool:" + connPool.size());
         Connection conn = connPool.poll();
         while (conn == null && connCount < connMaxCount) {
             try {
@@ -122,13 +122,28 @@ public class JDBCWrapper implements Serializable {
             conn = getConnction();
             conn.setAutoCommit(false);
             statement = conn.prepareStatement(sql);
-            for (Object[] params : paramsList) {
-                for (int i = 0; i < params.length; i++) {
-                    statement.setObject(i + 1, params[i]);
+            int size = paramsList.size();
+            int num = 0;
+            for (int i = 0; i <= size; i += 1000) {
+                statement.clearBatch();
+                for (int j = 0; j < 1000; j++) {
+                    if (size <= num) {
+                        break;
+                    }
+                    Object[] params = paramsList.get(num);
+                    for (int z = 0; z < params.length; z++) {
+                        statement.setObject(z + 1, params[z]);
+                    }
+                    statement.addBatch();
+                    num++;
                 }
-                statement.addBatch();
+                statement.executeBatch();
+                try {
+                    conn.commit();// 提交事务
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-            result = statement.executeBatch();
             conn.commit();
         } catch (Exception e) {
             e.printStackTrace();

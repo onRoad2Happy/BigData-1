@@ -17,6 +17,7 @@ import com.wyd.BigData.bean.AccountInfo;
 import com.wyd.BigData.bean.AccountNewCount;
 import com.wyd.BigData.bean.DeviceInfo;
 import com.wyd.BigData.bean.DeviceNewCount;
+import com.wyd.BigData.bean.PlayerNewCount;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.StringUtil;
 public class CreateRDD implements Serializable {
@@ -39,6 +40,7 @@ public class CreateRDD implements Serializable {
             List<AccountInfo>     accountInfoList = new ArrayList<>();
             List<DeviceNewCount>  deviceNewList   = new ArrayList<>();
             List<DeviceInfo>      deviceInfoList  = new ArrayList<>();
+            List<PlayerNewCount>  playerNewList   = new ArrayList<>();
 
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
@@ -49,6 +51,13 @@ public class CreateRDD implements Serializable {
                     AccountInfo accountInfo = dao.getAccountInfo(accountId);
                     Date dataTime = new Date(Long.parseLong(datas[1]));
                     String mac = StringUtil.filterOffUtf8Mb4(datas[5]);
+                    PlayerNewCount playerNewCount = new PlayerNewCount();
+                    playerNewCount.setServiceId(Integer.parseInt(datas[2]));
+                    playerNewCount.setChannelId(Integer.parseInt(datas[3]));
+                    playerNewCount.setPlayerId(Integer.parseInt(datas[12]));
+                    playerNewCount.setCreateTime(dataTime);
+                    playerNewList.add(playerNewCount);                    
+                    
                     // LogLog.error("accountInfo("+accountId+") is null?"+(accountInfo==null));
                     if (accountInfo == null) {
                         accountInfo = new AccountInfo();
@@ -93,6 +102,7 @@ public class CreateRDD implements Serializable {
                 dao.saveAccountInfoBatch(accountInfoList);
                 dao.saveDeviceNewCountBatch(today, deviceNewList);
                 dao.saveDeviceInfoBatch(deviceInfoList);
+                dao.savePlayerNewCountBatch(today, playerNewList);
             }
         });
     }

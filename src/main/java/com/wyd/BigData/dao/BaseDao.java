@@ -13,6 +13,7 @@ import com.wyd.BigData.bean.AccountNewCount;
 import com.wyd.BigData.bean.DeviceInfo;
 import com.wyd.BigData.bean.DeviceNewCount;
 import com.wyd.BigData.bean.LoginSumInfo;
+import com.wyd.BigData.bean.PlayerNewCount;
 public class BaseDao implements Serializable {
     /**
      * 
@@ -175,6 +176,16 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,account_id,create_time) values (?,?,?,?)", paramsList);
     }
 
+    public void savePlayerNewCountBatch(String today, List<PlayerNewCount> accountList) {
+        createPlayerNewCountSql(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerNewCount info : accountList) {
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getCreateTime()});
+        }
+        String tableName = today + "_tab_player_new_count";
+        jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,player_id,create_time) values (?,?,?,?)", paramsList);
+    }
+
     public void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {
         createDeviceNewCountSql(today);
         List<Object[]> paramsList = new ArrayList<>();
@@ -227,6 +238,21 @@ public class BaseDao implements Serializable {
                 .append("PRIMARY KEY (`id`),")//
                 .append("KEY `anc_service_id` (`service_id`),")//
                 .append("KEY `anc_channel_id` (`channel_id`)")//
+                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
+        jdbcw.executeSQL(createSql.toString());
+    }
+
+    private void createPlayerNewCountSql(String today) {
+        StringBuffer createSql = new StringBuffer();
+        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_player_new_count`(")//
+                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
+                .append("`service_id` int(11) DEFAULT NULL,")//
+                .append("`channel_id` int(11) DEFAULT NULL,")//
+                .append("`player_id` int(11) DEFAULT NULL,")//
+                .append("`create_time` datetime DEFAULT NULL,")//
+                .append("PRIMARY KEY (`id`),")//
+                .append("KEY `pnc_service_id` (`service_id`),")//
+                .append("KEY `pnc_channel_id` (`channel_id`)")//
                 .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
         jdbcw.executeSQL(createSql.toString());
     }
