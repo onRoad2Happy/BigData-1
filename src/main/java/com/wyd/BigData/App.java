@@ -45,9 +45,10 @@ public class App {
 				// 登陆数据入库
 				LoginRDD.call(rdd, spark);
 				// 物品流水
-				ItemLogRDD.call(rdd, spark);
+				//ItemLogRDD.call(rdd, spark);
 			}
 		});
+		
 		
 		ssc.start();
 		ssc.awaitTermination();
