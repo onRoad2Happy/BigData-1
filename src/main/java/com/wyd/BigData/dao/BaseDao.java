@@ -10,6 +10,8 @@ import com.wyd.BigData.JDBC.ExecuteCallBack;
 import com.wyd.BigData.JDBC.JDBCWrapper;
 import com.wyd.BigData.bean.AccountInfo;
 import com.wyd.BigData.bean.AccountNewCount;
+import com.wyd.BigData.bean.DeviceInfo;
+import com.wyd.BigData.bean.DeviceNewCount;
 import com.wyd.BigData.bean.LoginSumInfo;
 public class BaseDao implements Serializable {
     /**
@@ -20,6 +22,7 @@ public class BaseDao implements Serializable {
     private static BaseDao     instance         = null;
     JDBCWrapper                jdbcw            = null;
     Map<Integer, AccountInfo>  accountInfoMap   = null;
+    Map<String, DeviceInfo>    deviceInfoMap    = null;
 
     public BaseDao() {
         accountInfoMap = new LinkedHashMap<Integer, AccountInfo>() {
@@ -27,6 +30,14 @@ public class BaseDao implements Serializable {
 
             @Override
             protected boolean removeEldestEntry(java.util.Map.Entry<Integer, AccountInfo> pEldest) {
+                return size() > 1000;
+            }
+        };
+        deviceInfoMap = new LinkedHashMap<String, DeviceInfo>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected boolean removeEldestEntry(java.util.Map.Entry<String, DeviceInfo> pEldest) {
                 return size() > 1000;
             }
         };
@@ -73,6 +84,45 @@ public class BaseDao implements Serializable {
             return accountInfo;
         }
         return null;
+    }
+
+    public DeviceInfo getDeviceInfo(String mac) {
+        if (deviceInfoMap.containsKey(mac)) return deviceInfoMap.get(mac);
+        DeviceInfo deviceInfo = new DeviceInfo();
+        jdbcw.doQuery("select `id` ,`service_id` ,`channel_id`,`device_mac`,`create_time`, `device_name`,`system_name`,`system_version`,`app_version`  from tab_device_info where device_mac=?", new Object[] { mac}, new ExecuteCallBack() {
+            @Override
+            public void call(ResultSet rs) {
+                try {
+                    while (rs.next()) {
+                        deviceInfo.setId(rs.getInt(1));
+                        deviceInfo.setServiceId(rs.getInt(2));
+                        deviceInfo.setChannelId(rs.getInt(3));
+                        deviceInfo.setDeviceMac(rs.getString(4));
+                        deviceInfo.setCreateTime(rs.getDate(5));
+                        deviceInfo.setDeviceName(rs.getString(6));
+                        deviceInfo.setSystemName(rs.getString(7));
+                        deviceInfo.setSystemVersion(rs.getString(8));
+                        deviceInfo.setAppVersion(rs.getString(9));
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        if (deviceInfo.getId() != 0) {
+            deviceInfoMap.put(mac, deviceInfo);
+            return deviceInfo;
+        }
+        return null;
+    }
+
+    public void saveDeviceInfoBatch(List<DeviceInfo> accountList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (DeviceInfo info : accountList) {
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getDeviceMac(), info.getCreateTime(), info.getDeviceName(), info.getSystemName(), info.getSystemVersion(), info.getAppVersion()});
+        }
+        String tableName = "tab_device_info";
+        jdbcw.doBatch("insert into " + tableName + " (`service_id` ,`channel_id`,`device_mac`,`create_time`, `device_name`,`system_name`,`system_version`,`app_version`) values (?,?,?,?,?,?,?,?)", paramsList);
     }
 
     public void delete(String tableName) {
@@ -125,6 +175,16 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,account_id,create_time) values (?,?,?,?)", paramsList);
     }
 
+    public void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {
+        createDeviceNewCountSql(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (DeviceNewCount info : accountList) {
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getDeviceMac(), info.getCreateTime()});
+        }
+        String tableName = today + "_tab_device_new_count";
+        jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,device_mac,create_time) values (?,?,?,?)", paramsList);
+    }
+
     public void saveAccountInfoBatch(List<AccountInfo> accountList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (AccountInfo info : accountList) {
@@ -167,6 +227,21 @@ public class BaseDao implements Serializable {
                 .append("PRIMARY KEY (`id`),")//
                 .append("KEY `anc_service_id` (`service_id`),")//
                 .append("KEY `anc_channel_id` (`channel_id`)")//
+                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
+        jdbcw.executeSQL(createSql.toString());
+    }
+
+    private void createDeviceNewCountSql(String today) {
+        StringBuffer createSql = new StringBuffer();
+        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_device_new_count`(")//
+                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
+                .append("`service_id` int(11) DEFAULT NULL,")//
+                .append("`channel_id` int(11) DEFAULT NULL,")//
+                .append("`device_mac` varchar(255) DEFAULT NULL,")//
+                .append("`create_time` datetime DEFAULT NULL,")//
+                .append("PRIMARY KEY (`id`),")//
+                .append("KEY `dnc_service_id` (`service_id`),")//
+                .append("KEY `dnc_channel_id` (`channel_id`)")//
                 .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
         jdbcw.executeSQL(createSql.toString());
     }

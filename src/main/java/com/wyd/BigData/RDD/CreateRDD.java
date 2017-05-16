@@ -15,6 +15,8 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
 import com.wyd.BigData.bean.AccountInfo;
 import com.wyd.BigData.bean.AccountNewCount;
+import com.wyd.BigData.bean.DeviceInfo;
+import com.wyd.BigData.bean.DeviceNewCount;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.StringUtil;
 public class CreateRDD implements Serializable {
@@ -30,43 +32,67 @@ public class CreateRDD implements Serializable {
         final String today = sf.format(Calendar.getInstance().getTime());
         JavaRDD<SparkFlumeEvent> createRDD = filter(rdd);
         if (createRDD.count() == 0) return;
-        LogLog.error("createRDD count:"+createRDD.count());
+        LogLog.error("createRDD count:" + createRDD.count());
         createRDD.foreachPartition(new VoidFunction<Iterator<SparkFlumeEvent>>() {
-            BaseDao               dao         = BaseDao.getInstance();
-            List<AccountNewCount> accountNewList = new ArrayList<>();
-            List<AccountInfo> accountInfoList = new ArrayList<>();
+            BaseDao               dao             = BaseDao.getInstance();
+            List<AccountNewCount> accountNewList  = new ArrayList<>();
+            List<AccountInfo>     accountInfoList = new ArrayList<>();
+            List<DeviceNewCount>  deviceNewList   = new ArrayList<>();
+            List<DeviceInfo>      deviceInfoList  = new ArrayList<>();
 
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 while (t.hasNext()) {
                     String line = new String(t.next().event().getBody().array());
-                    String[] parts = SPACE.split(line);
-                    int accountId = Integer.parseInt(parts[4]);
+                    String[] datas = SPACE.split(line);
+                    int accountId = Integer.parseInt(datas[4]);
                     AccountInfo accountInfo = dao.getAccountInfo(accountId);
-                    Date dataTime = new Date(Long.parseLong(parts[1]));
-                    LogLog.error("accountInfo("+accountId+") is null?"+(accountInfo==null));
+                    Date dataTime = new Date(Long.parseLong(datas[1]));
+                    String mac = StringUtil.filterOffUtf8Mb4(datas[5]);
+                    // LogLog.error("accountInfo("+accountId+") is null?"+(accountInfo==null));
                     if (accountInfo == null) {
                         accountInfo = new AccountInfo();
                         accountInfo.setAccountId(accountId);
-                        accountInfo.setServiceId(Integer.parseInt(parts[2]));
-                        accountInfo.setChannelId(Integer.parseInt(parts[3]));
-                        accountInfo.setAccountName(parts[10]);
-                        accountInfo.setAccountPwd(parts[11]);
+                        accountInfo.setServiceId(Integer.parseInt(datas[2]));
+                        accountInfo.setChannelId(Integer.parseInt(datas[3]));
+                        accountInfo.setAccountName(datas[10]);
+                        accountInfo.setAccountPwd(datas[11]);
                         accountInfo.setCreateTime(dataTime);
-                        accountInfo.setDeviceMac(StringUtil.filterOffUtf8Mb4(parts[5]));
-                        accountInfo.setSystemType(StringUtil.filterOffUtf8Mb4(parts[7]));
-                        accountInfo.setSystemVersion(parts[8]);
+                        accountInfo.setDeviceMac(mac);
+                        accountInfo.setSystemType(StringUtil.filterOffUtf8Mb4(datas[7]));
+                        accountInfo.setSystemVersion(datas[8]);
                         accountInfoList.add(accountInfo);
                         AccountNewCount accountNewCount = new AccountNewCount();
-                        accountNewCount.setServiceId(Integer.parseInt(parts[2]));
-                        accountNewCount.setChannelId(Integer.parseInt(parts[3]));
+                        accountNewCount.setServiceId(Integer.parseInt(datas[2]));
+                        accountNewCount.setChannelId(Integer.parseInt(datas[3]));
                         accountNewCount.setAccountId(accountId);
                         accountNewCount.setCreateTime(dataTime);
                         accountNewList.add(accountNewCount);
                     }
+                    DeviceInfo deviceInfo = dao.getDeviceInfo(mac);
+                    if (null == deviceInfo) {
+                        deviceInfo = new DeviceInfo();
+                        deviceInfo.setServiceId(Integer.parseInt(datas[2]));
+                        deviceInfo.setChannelId(Integer.parseInt(datas[3]));
+                        deviceInfo.setDeviceMac(mac);
+                        deviceInfo.setCreateTime(dataTime);
+                        deviceInfo.setDeviceName(StringUtil.filterOffUtf8Mb4(datas[6]));
+                        deviceInfo.setSystemName(StringUtil.filterOffUtf8Mb4(datas[7]));
+                        deviceInfo.setSystemVersion(datas[8]);
+                        deviceInfo.setAppVersion(datas[9]);
+                        deviceInfoList.add(deviceInfo);
+                        DeviceNewCount deviceNewCount = new DeviceNewCount();
+                        deviceNewCount.setServiceId(Integer.parseInt(datas[2]));
+                        deviceNewCount.setChannelId(Integer.parseInt(datas[3]));
+                        deviceNewCount.setDeviceMac(mac);
+                        deviceNewCount.setCreateTime(dataTime);
+                        deviceNewList.add(deviceNewCount);
+                    }
                 }
                 dao.saveAccountNewCountBatch(today, accountNewList);
                 dao.saveAccountInfoBatch(accountInfoList);
+                dao.saveDeviceNewCountBatch(today, deviceNewList);
+                dao.saveDeviceInfoBatch(deviceInfoList);
             }
         });
     }
