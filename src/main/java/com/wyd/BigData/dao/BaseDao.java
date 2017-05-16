@@ -131,7 +131,7 @@ public class BaseDao implements Serializable {
             paramsList.add(new Object[] { info.getAccountId(), info.getServiceId(), info.getChannelId(), info.getAccountName(), info.getAccountPwd(), info.getCreateTime(), info.getDeviceMac(), info.getSystemVersion(), info.getSystemType()});
         }
         String tableName = "tab_account_info";
-        jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`," + "`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type) values (?,?,?,?,?,?,?,?,?)", paramsList);
+        jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
 
     /**

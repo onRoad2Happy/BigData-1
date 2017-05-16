@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
@@ -29,6 +30,7 @@ public class CreateRDD implements Serializable {
         final String today = sf.format(Calendar.getInstance().getTime());
         JavaRDD<SparkFlumeEvent> createRDD = filter(rdd);
         if (createRDD.count() == 0) return;
+        LogLog.error("createRDD count:"+createRDD.count());
         createRDD.foreachPartition(new VoidFunction<Iterator<SparkFlumeEvent>>() {
             BaseDao               dao         = BaseDao.getInstance();
             List<AccountNewCount> accountNewList = new ArrayList<>();
@@ -42,6 +44,7 @@ public class CreateRDD implements Serializable {
                     int accountId = Integer.parseInt(parts[4]);
                     AccountInfo accountInfo = dao.getAccountInfo(accountId);
                     Date dataTime = new Date(Long.parseLong(parts[1]));
+                    LogLog.error("accountInfo("+accountId+") is null?"+(accountInfo==null));
                     if (accountInfo == null) {
                         accountInfo = new AccountInfo();
                         accountInfo.setAccountId(accountId);

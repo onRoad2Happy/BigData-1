@@ -14,9 +14,13 @@ public class JDBCWrapper implements Serializable {
     /**
      * 
      */
-    private static final long serialVersionUID = 6876426193742259377L;
-    private static JDBCWrapper                     instance = null;
-    private static LinkedBlockingQueue<Connection> connPool = new LinkedBlockingQueue<>();
+    private static final long                      serialVersionUID = 6876426193742259377L;
+    private static JDBCWrapper                     instance         = null;
+    private static LinkedBlockingQueue<Connection> connPool         = new LinkedBlockingQueue<>();
+    private int                                    connCount        = 0;
+    private int                                    connMaxCount     = 5;
+    private int                                    connMinCount     = 2;
+    String                                         url              = null;
 
     static {
         try {
@@ -28,12 +32,13 @@ public class JDBCWrapper implements Serializable {
 
     public JDBCWrapper() {
         PropertiesConfiguration config = Global.getInstance().config;
-        String url = config.getString("jdbc.url");
-        for (int i = 0; i < 2; i++) {
+        url = config.getString("jdbc.url");
+        for (int i = 0; i < connMinCount; i++) {
             Connection conn;
             try {
                 conn = DriverManager.getConnection(url);
                 connPool.put(conn);
+                connCount++;
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -54,19 +59,22 @@ public class JDBCWrapper implements Serializable {
     }
 
     public Connection getConnction() throws Exception {
-        int count = 0;
+        //System.out.println("connPool:" + connPool.size());
         Connection conn = connPool.poll();
-        while (conn == null && count < 10) {
+        while (conn == null && connCount < connMaxCount) {
             try {
                 Thread.sleep(200l);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            conn = connPool.poll();
-            count++;
+            if (connPool.poll() == null) {
+                conn = DriverManager.getConnection(url);
+                connPool.put(conn);
+                connCount++;
+            }
         }
         if (conn == null) {
-            throw new Exception("cant't get any connection!");
+            throw new Exception("cant't get any connection! connCount(" + connCount + ") ");
         }
         return conn;
     }
@@ -104,10 +112,9 @@ public class JDBCWrapper implements Serializable {
      * 批量提交
      */
     public int[] doBatch(String sql, List<Object[]> paramsList) {
-        
         Connection conn = null;
         int[] result = null;
-        if (paramsList == null || paramsList.size()==0) {
+        if (paramsList == null || paramsList.size() == 0) {
             return result;
         }
         PreparedStatement statement = null;
@@ -115,14 +122,12 @@ public class JDBCWrapper implements Serializable {
             conn = getConnction();
             conn.setAutoCommit(false);
             statement = conn.prepareStatement(sql);
-            
-                for (Object[] params : paramsList) {
-                    for (int i = 0; i < params.length; i++) {
-                        statement.setObject(i + 1, params[i]);
-                    }
-                    statement.addBatch();
+            for (Object[] params : paramsList) {
+                for (int i = 0; i < params.length; i++) {
+                    statement.setObject(i + 1, params[i]);
                 }
-            
+                statement.addBatch();
+            }
             result = statement.executeBatch();
             conn.commit();
         } catch (Exception e) {
@@ -209,6 +214,8 @@ public class JDBCWrapper implements Serializable {
         for (String n : names) {
             System.out.println(n);
         }
+        paramsList.add(new Object[] { "java", "scala"});
+        jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
         // jdbcw.executeSQL("delete from tab_user");
     }
 }
