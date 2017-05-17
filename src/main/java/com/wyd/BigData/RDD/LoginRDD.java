@@ -3,6 +3,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -22,6 +23,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
 import com.wyd.BigData.bean.LoginSumInfo;
+import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
 import scala.Tuple2;
 public class LoginRDD implements Serializable {
@@ -36,7 +38,7 @@ public class LoginRDD implements Serializable {
     public  void call(JavaRDD<SparkFlumeEvent> rdd, SparkSession spark) {
         if (rdd.count() == 0) return;
         JavaRDD<SparkFlumeEvent> loingRDD = filter(rdd);
-        LogLog.error("count1=====" + loingRDD.count());
+        LogLog.debug("loingRDD=====" + loingRDD.count());
         // 数据源去重
         JavaRDD<Row> loingRowRDD = loingRDD.map(new Function<SparkFlumeEvent, Row>() {
             @Override
@@ -46,7 +48,7 @@ public class LoginRDD implements Serializable {
                 return RowFactory.create(Integer.valueOf(parts[2]), Integer.valueOf(parts[3]), Integer.valueOf(parts[5]));
             }
         }).distinct();
-        LogLog.error("count2=====" + loingRowRDD.count());
+        LogLog.debug("count2=====" + loingRowRDD.count());
         final String today = sf.format(Calendar.getInstance().getTime());
         // 查询数据库
         BaseDao dao = BaseDao.getInstance();
@@ -75,7 +77,7 @@ public class LoginRDD implements Serializable {
                     return  !optional.isPresent() || !optional.get();
                 }
             });
-            LogLog.error("count3=====" + filtered.count());
+            LogLog.debug("count3=====" + filtered.count());
             
             
             JavaPairRDD<Integer, Row> rdd2filtered = filtered.mapToPair(new PairFunction<Tuple2<Integer, Tuple2<Row, Optional<Boolean>>>, Integer, Row>() {
@@ -112,13 +114,38 @@ public class LoginRDD implements Serializable {
                 }
             });
         }
+        //更新playerInfo
+        loingRDD.foreachPartition(new VoidFunction<Iterator<SparkFlumeEvent>>() {
+            @Override
+            public void call(Iterator<SparkFlumeEvent> t) throws Exception {
+                BaseDao dao = BaseDao.getInstance();
+                List<PlayerInfo> playerInfoList = new ArrayList<>();
+                while (t.hasNext()) {                    
+                    String line = new String(t.next().event().getBody().array());
+                    String[] datas = SPACE.split(line);
+                    int playerId = Integer.parseInt(datas[5]);
+                    PlayerInfo info = dao.getPlayerInfo(playerId);
+                    if(info==null){
+                        continue;
+                    }
+                    Date dataTime = new Date(Long.parseLong(datas[1]));
+                    info.setLoginTime(dataTime);                    
+                    info.setLoginNum(info.getLoginNum() + 1);
+                    if (datas.length > 12) {                        
+                        info.setDiamond(Integer.parseInt(datas[12]));
+                        info.setGold(Integer.parseInt(datas[13]));
+                        info.setVigor(Integer.parseInt(datas[14]));
+                    }
+                    playerInfoList.add(info);
+                }
+                dao.updatePlayerInfoBatch(playerInfoList);
+                
+            }
+        });
     }
     
 
-    private void createTable(SparkSession spark, String tableName) {
-        spark.sql("CREATE TABLE IF NOT EXISTS " + tableName + " (server_id INT,channel_id INT, player_id INT)");
-    }
-
+    
     
 
     @SuppressWarnings("serial")
@@ -133,11 +160,4 @@ public class LoginRDD implements Serializable {
         });
     }
 
-    private StructType createStruct() {
-        List<StructField> structFields = new ArrayList<StructField>();
-        structFields.add(DataTypes.createStructField("server_id", DataTypes.IntegerType, true));
-        structFields.add(DataTypes.createStructField("channel_id", DataTypes.IntegerType, true));
-        structFields.add(DataTypes.createStructField("player_id", DataTypes.IntegerType, true));
-        return DataTypes.createStructType(structFields);
-    }
 }

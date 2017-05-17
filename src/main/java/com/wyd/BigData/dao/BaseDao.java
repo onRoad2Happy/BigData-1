@@ -25,6 +25,7 @@ public class BaseDao implements Serializable {
     JDBCWrapper                jdbcw            = null;
     Map<Integer, AccountInfo>  accountInfoMap   = null;
     Map<String, DeviceInfo>    deviceInfoMap    = null;
+    Map<Integer, PlayerInfo>    playerInfoMap    = null;
 
     public BaseDao() {
         accountInfoMap = new LinkedHashMap<Integer, AccountInfo>() {
@@ -32,6 +33,14 @@ public class BaseDao implements Serializable {
 
             @Override
             protected boolean removeEldestEntry(java.util.Map.Entry<Integer, AccountInfo> pEldest) {
+                return size() > 1000;
+            }
+        };
+        playerInfoMap = new LinkedHashMap<Integer, PlayerInfo>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected boolean removeEldestEntry(java.util.Map.Entry<Integer, PlayerInfo> pEldest) {
                 return size() > 1000;
             }
         };
@@ -60,7 +69,7 @@ public class BaseDao implements Serializable {
     public AccountInfo getAccountInfo(int id) {
         if (accountInfoMap.containsKey(id)) return accountInfoMap.get(id);
         AccountInfo accountInfo = new AccountInfo();
-        jdbcw.doQuery("select `id` ,`account_id`,`service_id`,`channel_id`,`account_name`," + "`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type` from tab_account_info where id=?", new Object[] { id}, new ExecuteCallBack() {
+        jdbcw.doQuery("select `id` ,`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type` from tab_account_info where id=?", new Object[] { id}, new ExecuteCallBack() {
             @Override
             public void call(ResultSet rs) {
                 try {
@@ -84,6 +93,126 @@ public class BaseDao implements Serializable {
         if (accountInfo.getId() != 0) {
             accountInfoMap.put(id, accountInfo);
             return accountInfo;
+        }
+        return null;
+    }
+    public PlayerInfo getPlayerInfo(int playerId) {
+        if (playerInfoMap.containsKey(playerId)) return playerInfoMap.get(playerId);
+        PlayerInfo info = new PlayerInfo();
+        jdbcw.doQuery("select `id`,`player_id`,`service_id`,`channel_id`,`account_id`,`device_mac`,`create_time`,`player_name`,`player_sex`,`player_level`,`upgrade_time`,`player_fighting`,`vip_level`,`sports_level`,`ranking_level`,`login_time`,`is_two`,`is_third`,`is_four`,`is_five`,`is_six`,`is_seven`,`is_fourteen`,`is_thirty`,`is_sixty`,`total_money`,`recharge_num`,`first_channel`,`first_money`,`first_level`,`first_recharge`,`first_cost_time`,`first_cost_level`,`first_cost_num`,`first_cost_item`,`wltv`,`mltv`,`diamond`,`gold`,`login_num`,`seven_num`,`total_online`,`guild_id`,`coures_id`,`coures_step`,`tiro_time`,`mate_id`,`top_singlemap`,`top_dare_singlemap`,`top_singlemap_time`,`top_elite_singlemap`,`top_dare_elite_singlemap`,`top_elite_singlemap_time`,`vigor`,`battle_win_marry`,`battle_win_guild`,`gag_time`,`gag_reason`,`is_eight`,`is_nine`,`is_ten`,`is_eleven`,`is_twelve`,`is_thirteen`,`login_days`,`friend_count`,`weapon_id`,`weapon_item_id`,`weapon_level`,`necklace_id`,`necklace_item_id`,`necklace_level`,`ring_id`,`ring_item_id`,`ring_level`,`bracelet_id`,`bracelet_item_id`,`bracelet_level`,`talisman_id`,`talisman_item_id`,`talisman_level`,`medal_id`,`medal_item_id`,`medal_level`,`prop_fury_level`,`prop_hidesingle_level`,`prop_hidegroup_level`,`prop_reflect_level`,`prop_treatsingle_level`,`prop_treatgroup_level`,`prop_guardian_level`,`prop_dice_level`,`pet_id`,`pet_item_id`,`pet_level`,`rank_match_num`,`contact_num`,`top_towermap`,`towermap_num`,`teammap_num` from tab_player_info where player_id=?", new Object[] { playerId}, new ExecuteCallBack() {
+            @Override
+            public void call(ResultSet rs) {
+                try {
+                    while (rs.next()) {
+                        info.setId(rs.getInt(1));
+                        info.setPlayerId(rs.getInt(2));
+                        info.setServiceId(rs.getInt(3));
+                        info.setChannelId(rs.getInt(4));
+                        info.setAccountId(rs.getInt(5));
+                        info.setDeviceMac(rs.getString(6));
+                        info.setCreateTime(rs.getDate(7));
+                        info.setPlayerName(rs.getString(8));
+                        info.setPlayerSex(rs.getString(9));
+                        info.setPlayerLevel(rs.getInt(10));
+                        info.setUpgradeTime(rs.getInt(11));
+                        info.setPlayerFighting(rs.getInt(12));
+                        info.setVipLevel(rs.getInt(13));
+                        info.setSportsLevel(rs.getInt(14));
+                        info.setRankingLevel(rs.getInt(15));
+                        info.setLoginTime(rs.getDate(16));
+                        info.setTwo(rs.getBoolean(17));
+                        info.setThird(rs.getBoolean(18));
+                        info.setFour(rs.getBoolean(19));
+                        info.setFive(rs.getBoolean(20));
+                        info.setSix(rs.getBoolean(21));
+                        info.setSeven(rs.getBoolean(22));
+                        info.setFourteen(rs.getBoolean(23));
+                        info.setThirty(rs.getBoolean(24));
+                        info.setSixty(rs.getBoolean(25));
+                        info.setTotalMoney(rs.getDouble(26));
+                        info.setRechargeNum(rs.getInt(27));
+                        info.setFirstChannel(rs.getInt(28));
+                        info.setFirstMoney(rs.getDouble(29));
+                        info.setFirstLevel(rs.getInt(30));
+                        info.setFirstRecharge(rs.getDate(31));
+                        info.setFirstCostTime(rs.getDate(32));
+                        info.setFirstCostLevel(rs.getInt(33));
+                        info.setFirstCostNum(rs.getInt(34));
+                        info.setFirstCostItem(rs.getInt(35));
+                        info.setWltv(rs.getDouble(36));
+                        info.setMltv(rs.getDouble(37));
+                        info.setDiamond(rs.getInt(38));
+                        info.setGold(rs.getInt(39));
+                        info.setLoginNum(rs.getInt(40));
+                        info.setSevenNum(rs.getInt(41));
+                        info.setTotalOnline(rs.getInt(42));
+                        info.setGuildId(rs.getInt(43));
+                        info.setCouresId(rs.getInt(44));
+                        info.setCouresStep(rs.getInt(45));
+                        info.setTiroTime(rs.getInt(46));
+                        info.setMateId(rs.getInt(47));
+                        info.setTopSinglemap(rs.getInt(48));
+                        info.setTopDareSinglemap(rs.getInt(49));
+                        info.setTopSinglemapTime(rs.getInt(50));
+                        info.setTopEliteSinglemap(rs.getInt(51));
+                        info.setTopDareEliteSinglemap(rs.getInt(52));
+                        info.setTopEliteSinglemapTime(rs.getInt(53));
+                        info.setVigor(rs.getInt(54));
+                        info.setBattleWinMarry(rs.getInt(55));
+                        info.setBattleWinGuild(rs.getInt(56));
+                        info.setGagTime(rs.getString(57));
+                        info.setGagReason(rs.getString(58));
+                        info.setEight(rs.getBoolean(59));
+                        info.setNine(rs.getBoolean(60));
+                        info.setTen(rs.getBoolean(61));
+                        info.setEleven(rs.getBoolean(62));
+                        info.setTwelve(rs.getBoolean(63));
+                        info.setThirteen(rs.getBoolean(64));
+                        info.setLoginDays(rs.getInt(65));
+                        info.setFriendCount(rs.getInt(66));
+                        info.setWeaponId(rs.getInt(67));
+                        info.setWeaponItemId(rs.getInt(68));
+                        info.setWeaponLevel(rs.getInt(69));
+                        info.setNecklaceId(rs.getInt(70));
+                        info.setNecklaceItemId(rs.getInt(71));
+                        info.setNecklaceLevel(rs.getInt(72));
+                        info.setRingId(rs.getInt(73));
+                        info.setRingItemId(rs.getInt(74));
+                        info.setRingLevel(rs.getInt(75));
+                        info.setBraceletId(rs.getInt(76));
+                        info.setBraceletItemId(rs.getInt(77));
+                        info.setBraceletLevel(rs.getInt(78));
+                        info.setTalismanId(rs.getInt(79));
+                        info.setTalismanItemId(rs.getInt(80));
+                        info.setTalismanLevel(rs.getInt(81));
+                        info.setMedalId(rs.getInt(82));
+                        info.setMedalItemId(rs.getInt(83));
+                        info.setMedalLevel(rs.getInt(84));
+                        info.setPropFuryLevel(rs.getInt(85));
+                        info.setPropHidesingleLevel(rs.getInt(86));
+                        info.setPropHidegroupLevel(rs.getInt(87));
+                        info.setPropReflectLevel(rs.getInt(88));
+                        info.setPropTreatsingleLevel(rs.getInt(89));
+                        info.setPropTreatgroupLevel(rs.getInt(90));
+                        info.setPropGuardianLevel(rs.getInt(91));
+                        info.setPropDiceLevel(rs.getInt(92));
+                        info.setPetId(rs.getInt(93));
+                        info.setPetItemId(rs.getInt(94));
+                        info.setPetLevel(rs.getInt(95));
+                        info.setRankMatchNum(rs.getInt(96));
+                        info.setContactNum(rs.getInt(97));
+                        info.setTopTowermap(rs.getInt(98));
+                        info.setTowermapNum(rs.getInt(99));
+                        info.setTeammapNum(rs.getInt(100));
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        if (info.getId() != 0) {
+            playerInfoMap.put(playerId, info);
+            return info;
         }
         return null;
     }
@@ -212,6 +341,14 @@ public class BaseDao implements Serializable {
         }
         String tableName = "tab_account_info";
         jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
+    }
+    public void updatePlayerInfoBatch(List<PlayerInfo> playerInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getPlayerLevel(),info.getLoginTime(),info.getLoginNum(),info.getDiamond(),info.getGold(),info.getVigor(),info.getPlayerId()});
+            playerInfoMap.put(info.getPlayerId(), info);
+        }        
+        jdbcw.doBatch("update tab_player_info set player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=? where player_id=?", paramsList);
     }
 
     /**

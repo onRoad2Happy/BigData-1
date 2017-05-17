@@ -61,17 +61,9 @@ public class JDBCWrapper implements Serializable {
     public Connection getConnction() throws Exception {
         // System.out.println("connPool:" + connPool.size());
         Connection conn = connPool.poll();
-        while (conn == null && connCount < connMaxCount) {
-            try {
-                Thread.sleep(200l);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            if (connPool.poll() == null) {
-                conn = DriverManager.getConnection(url);
-                connPool.put(conn);
-                connCount++;
-            }
+        while (conn == null && connCount < connMaxCount) {            
+            conn = DriverManager.getConnection(url);                
+            connCount++;
         }
         if (conn == null) {
             throw new Exception("cant't get any connection! connCount(" + connCount + ") ");
