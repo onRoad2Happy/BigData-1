@@ -124,25 +124,17 @@ public class JDBCWrapper implements Serializable {
             statement = conn.prepareStatement(sql);
             int size = paramsList.size();
             int num = 0;
-            for (int i = 0; i <= size; i += 1000) {
+            for (int i = 0; i < size; i += 1000) {
                 statement.clearBatch();
-                for (int j = 0; j < 1000; j++) {
-                    if (size <= num) {
-                        break;
-                    }
+                for (int j = 0; j < 1000 && num < size; j++, num++) {
                     Object[] params = paramsList.get(num);
                     for (int z = 0; z < params.length; z++) {
                         statement.setObject(z + 1, params[z]);
                     }
                     statement.addBatch();
-                    num++;
                 }
                 statement.executeBatch();
-                try {
-                    conn.commit();// 提交事务
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                conn.commit();// 提交事务
             }
             conn.commit();
         } catch (Exception e) {
@@ -206,31 +198,32 @@ public class JDBCWrapper implements Serializable {
 
     public static void main(String[] args) {
         JDBCWrapper jdbcw = JDBCWrapper.getInstance();
-        List<String> names = new ArrayList<String>();
-        List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { "spark"});
-        paramsList.add(new Object[] { "scala"});
-        jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
-        paramsList.clear();
-        paramsList.add(new Object[] { "java", "scala"});
-        jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
-        jdbcw.doQuery("select * from tab_user", new Object[] {}, new ExecuteCallBack() {
-            @Override
-            public void call(ResultSet rs) {
-                try {
-                    while (rs.next()) {
-                        names.add(rs.getString(2));
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        for (String n : names) {
-            System.out.println(n);
-        }
-        paramsList.add(new Object[] { "java", "scala"});
-        jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
-        // jdbcw.executeSQL("delete from tab_user");
+         List<String> names = new ArrayList<String>();
+         List<Object[]> paramsList = new ArrayList<>();
+         paramsList.add(new Object[] { "spark"});
+         paramsList.add(new Object[] { "scala"});
+         jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
+         paramsList.clear();
+         paramsList.add(new Object[] { "java", "scala"});
+         jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
+         jdbcw.doQuery("select * from tab_user", new Object[] {}, new ExecuteCallBack() {
+         @Override
+         public void call(ResultSet rs) {
+         try {
+         while (rs.next()) {
+         names.add(rs.getString(2));
+         }
+         } catch (SQLException e) {
+         e.printStackTrace();
+         }
+         }
+         });
+         for (String n : names) {
+         System.out.println(n);
+         }
+         paramsList.add(new Object[] { "java", "scala"});
+         jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
+         jdbcw.executeSQL("delete from tab_user");
+       
     }
 }

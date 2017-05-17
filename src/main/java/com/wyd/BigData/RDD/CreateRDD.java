@@ -17,6 +17,7 @@ import com.wyd.BigData.bean.AccountInfo;
 import com.wyd.BigData.bean.AccountNewCount;
 import com.wyd.BigData.bean.DeviceInfo;
 import com.wyd.BigData.bean.DeviceNewCount;
+import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.bean.PlayerNewCount;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.StringUtil;
@@ -41,7 +42,7 @@ public class CreateRDD implements Serializable {
             List<DeviceNewCount>  deviceNewList   = new ArrayList<>();
             List<DeviceInfo>      deviceInfoList  = new ArrayList<>();
             List<PlayerNewCount>  playerNewList   = new ArrayList<>();
-
+            List<PlayerInfo> playerInfoList = new ArrayList<>();
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 while (t.hasNext()) {
@@ -56,8 +57,19 @@ public class CreateRDD implements Serializable {
                     playerNewCount.setChannelId(Integer.parseInt(datas[3]));
                     playerNewCount.setPlayerId(Integer.parseInt(datas[12]));
                     playerNewCount.setCreateTime(dataTime);
-                    playerNewList.add(playerNewCount);                    
-                    
+                    playerNewList.add(playerNewCount);  
+                    //plyaerInfo
+                    PlayerInfo playerInfo = new PlayerInfo();
+                    playerInfo.setPlayerId(Integer.parseInt(datas[12]));
+                    playerInfo.setServiceId(Integer.parseInt(datas[2]));
+                    playerInfo.setChannelId(Integer.parseInt(datas[3]));
+                    playerInfo.setAccountId(Integer.parseInt(datas[4]));                    
+                    playerInfo.setCreateTime(dataTime);
+                    playerInfo.setPlayerName(datas[13]);
+                    playerInfo.setDeviceMac(mac);
+                    playerInfo.setPlayerSex("0".equals(datas[14]) ? "男" : "女");
+                    playerInfo.setLoginTime(playerInfo.getCreateTime());
+                    playerInfoList.add(playerInfo);
                     // LogLog.error("accountInfo("+accountId+") is null?"+(accountInfo==null));
                     if (accountInfo == null) {
                         accountInfo = new AccountInfo();
@@ -103,6 +115,7 @@ public class CreateRDD implements Serializable {
                 dao.saveDeviceNewCountBatch(today, deviceNewList);
                 dao.saveDeviceInfoBatch(deviceInfoList);
                 dao.savePlayerNewCountBatch(today, playerNewList);
+                dao.savePlayerInfoBatch(playerInfoList);
             }
         });
     }
