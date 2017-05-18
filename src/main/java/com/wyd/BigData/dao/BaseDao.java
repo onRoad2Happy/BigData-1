@@ -2,7 +2,10 @@ package com.wyd.BigData.dao;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,14 +25,15 @@ public class BaseDao implements Serializable {
     /**
      * 
      */
-    private static final long  serialVersionUID = 125201040947818309L;
-    public static final String TAB_DIRECTORY    = "";
-    private static BaseDao     instance         = null;
-    JDBCWrapper                jdbcw            = null;
-    Map<Integer, AccountInfo>  accountInfoMap   = null;
-    Map<String, DeviceInfo>    deviceInfoMap    = null;
-    Map<Integer, PlayerInfo>   playerInfoMap    = null;
-    Map<Integer, LoginInfo>    loginInfoMap     = null;
+    private static final long       serialVersionUID = 125201040947818309L;
+    private static SimpleDateFormat sf               = new SimpleDateFormat("yyyy_MM_dd");
+    private static final String     TAB_DIRECTORY    = "";
+    private static BaseDao          instance         = null;
+    JDBCWrapper                     jdbcw            = null;
+    Map<Integer, AccountInfo>       accountInfoMap   = null;
+    Map<String, DeviceInfo>         deviceInfoMap    = null;
+    Map<Integer, PlayerInfo>        playerInfoMap    = null;
+    Map<Integer, LoginInfo>         loginInfoMap     = null;
 
     public BaseDao() {
         loginInfoMap = new LinkedHashMap<Integer, LoginInfo>() {
@@ -92,7 +96,7 @@ public class BaseDao implements Serializable {
                         accountInfo.setChannelId(rs.getInt(4));
                         accountInfo.setAccountName(rs.getString(5));
                         accountInfo.setAccountPwd(rs.getString(6));
-                        accountInfo.setCreateTime(rs.getDate(7));
+                        accountInfo.setCreateTime(new Date(rs.getTimestamp(7).getTime()));
                         accountInfo.setDeviceMac(rs.getString(8));
                         accountInfo.setSystemVersion(rs.getString(9));
                         accountInfo.setSystemType(rs.getString(10));
@@ -125,7 +129,7 @@ public class BaseDao implements Serializable {
                                 info.setChannelId(rs.getInt(4));
                                 info.setAccountId(rs.getInt(5));
                                 info.setDeviceMac(rs.getString(6));
-                                info.setCreateTime(rs.getDate(7));
+                                info.setCreateTime(new Date(rs.getTimestamp(7).getTime()));
                                 info.setPlayerName(rs.getString(8));
                                 info.setPlayerSex(rs.getString(9));
                                 info.setPlayerLevel(rs.getInt(10));
@@ -134,7 +138,7 @@ public class BaseDao implements Serializable {
                                 info.setVipLevel(rs.getInt(13));
                                 info.setSportsLevel(rs.getInt(14));
                                 info.setRankingLevel(rs.getInt(15));
-                                info.setLoginTime(rs.getDate(16));
+                                info.setLoginTime(new Date(rs.getTimestamp(16).getTime()));
                                 info.setTwo(rs.getBoolean(17));
                                 info.setThird(rs.getBoolean(18));
                                 info.setFour(rs.getBoolean(19));
@@ -149,8 +153,8 @@ public class BaseDao implements Serializable {
                                 info.setFirstChannel(rs.getInt(28));
                                 info.setFirstMoney(rs.getDouble(29));
                                 info.setFirstLevel(rs.getInt(30));
-                                info.setFirstRecharge(rs.getDate(31));
-                                info.setFirstCostTime(rs.getDate(32));
+                                info.setFirstRecharge(new Date(rs.getTimestamp(31).getTime()));
+                                info.setFirstCostTime(new Date(rs.getTimestamp(32).getTime()));
                                 info.setFirstCostLevel(rs.getInt(33));
                                 info.setFirstCostNum(rs.getInt(34));
                                 info.setFirstCostItem(rs.getInt(35));
@@ -244,7 +248,7 @@ public class BaseDao implements Serializable {
                         deviceInfo.setServiceId(rs.getInt(2));
                         deviceInfo.setChannelId(rs.getInt(3));
                         deviceInfo.setDeviceMac(rs.getString(4));
-                        deviceInfo.setCreateTime(rs.getDate(5));
+                        deviceInfo.setCreateTime(new Date(rs.getTimestamp(5).getTime()));
                         deviceInfo.setDeviceName(rs.getString(6));
                         deviceInfo.setSystemName(rs.getString(7));
                         deviceInfo.setSystemVersion(rs.getString(8));
@@ -356,12 +360,12 @@ public class BaseDao implements Serializable {
     public LoginInfo getLoginInfo(String today, int playerId) {
         if (loginInfoMap.containsKey(playerId)) return loginInfoMap.get(playerId);
         LoginInfo info = new LoginInfo();
-        String sql = "select `id`,`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name` from "+today+"_tab_login_info where player_id=?";
-        jdbcw.doQuery(sql, new Object[]{playerId}, new ExecuteCallBack() {
+        String sql = "select `id`,`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name` from " + today + "_tab_login_info where player_id=?";
+        jdbcw.doQuery(sql, new Object[] { playerId}, new ExecuteCallBack() {
             @Override
             public void call(ResultSet rs) {
                 try {
-                    while(rs.next()){
+                    while (rs.next()) {
                         info.setId(rs.getInt(1));
                         info.setServiceId(rs.getInt(2));
                         info.setChannelId(rs.getInt(3));
@@ -372,8 +376,8 @@ public class BaseDao implements Serializable {
                         info.setSystemName(rs.getString(8));
                         info.setSystemVersion(rs.getString(9));
                         info.setAppVersion(rs.getString(10));
-                        info.setLoginTime(rs.getDate(11));
-                        info.setLogoutTime(rs.getDate(12));
+                        info.setLoginTime(new Date(rs.getTimestamp(11).getTime()));
+                        info.setLogoutTime(new Date(rs.getTimestamp(12).getTime()));
                         info.setOnlineTime(rs.getInt(13));
                         info.setLoginIp(rs.getString(14));
                         info.setDiamond(rs.getInt(15));
@@ -402,7 +406,7 @@ public class BaseDao implements Serializable {
             paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getAccountId(), info.getPlayerId(), info.getDeviceMac(), info.getDeviceName(), info.getSystemName(), info.getSystemVersion(), info.getAppVersion(), info.getLoginTime(), info.getLogoutTime(), info.getOnlineTime(), info.getLoginIp(), info.getDiamond(), info.getGold(), info.getVigor(), info.getPlayerLevel(), info.getAccountName(), info.getPlayerName()});
         }
         String tableName = today + "_tab_login_info";
-        jdbcw.doBatch("insert into " + tableName + " (`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
+        jdbcw.doBatch("insert into " + tableName + " (`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
     }
 
     public void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {
@@ -433,16 +437,24 @@ public class BaseDao implements Serializable {
         String tableName = "tab_account_info";
         jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
-    public void updateLoginInfoBatch(String today,List<LoginInfo> loginInfoList) {
-        List<Object[]> paramsList = new ArrayList<>();
+
+    public void updateLoginInfoBatch(List<LoginInfo> loginInfoList) {
+        Map<String, List<Object[]>> dayParamMap = new HashMap<>();
         for (LoginInfo info : loginInfoList) {
-            paramsList.add(new Object[] {  info.getPlayerId()});
+            String today = sf.format(info.getLoginTime());
+            List<Object[]> paramsList = dayParamMap.get(today);
+            if (paramsList == null) {
+                paramsList = new ArrayList<>();
+                dayParamMap.put(today, paramsList);
+            }
+            paramsList.add(new Object[] {info.getLogoutTime(),info.getOnlineTime(),info.getPlayerLevel(), info.getPlayerId()});
             loginInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update "+today+"_tab_login_info set  where player_id=?", paramsList);
+        for (String today : dayParamMap.keySet()) {
+            jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=?", dayParamMap.get(today));
+        }
     }
-    
-    
+
     public void updatePlayerInfoBatch(List<PlayerInfo> playerInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
