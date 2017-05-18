@@ -40,6 +40,8 @@ public class LogoutRDD implements Serializable {
                 while (t.hasNext()) {
                     String line = new String(t.next().event().getBody().array());
                     String[] datas = SPACE.split(line);
+                    int playerId = Integer.parseInt(datas[2]);
+                    PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
                 }
             }
         });

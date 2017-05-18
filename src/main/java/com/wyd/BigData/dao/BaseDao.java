@@ -12,6 +12,7 @@ import com.wyd.BigData.bean.AccountInfo;
 import com.wyd.BigData.bean.AccountNewCount;
 import com.wyd.BigData.bean.DeviceInfo;
 import com.wyd.BigData.bean.DeviceNewCount;
+import com.wyd.BigData.bean.LoginInfo;
 import com.wyd.BigData.bean.LoginSumInfo;
 import com.wyd.BigData.bean.OnlineInfo;
 import com.wyd.BigData.bean.PlayerInfo;
@@ -28,8 +29,17 @@ public class BaseDao implements Serializable {
     Map<Integer, AccountInfo>  accountInfoMap   = null;
     Map<String, DeviceInfo>    deviceInfoMap    = null;
     Map<Integer, PlayerInfo>   playerInfoMap    = null;
+    Map<Integer, LoginInfo>    loginInfoMap     = null;
 
     public BaseDao() {
+        loginInfoMap = new LinkedHashMap<Integer, LoginInfo>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected boolean removeEldestEntry(java.util.Map.Entry<Integer, LoginInfo> pEldest) {
+                return size() > 1000;
+            }
+        };
         accountInfoMap = new LinkedHashMap<Integer, AccountInfo>() {
             private static final long serialVersionUID = 1L;
 
@@ -332,15 +342,67 @@ public class BaseDao implements Serializable {
         String tableName = today + "_tab_player_new_count";
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,player_id,create_time) values (?,?,?,?)", paramsList);
     }
-    
+
     public void saveRechargeInfoBatch(String today, List<RechargeInfo> accountList) {
         createRechargeInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (RechargeInfo info : accountList) {
-            paramsList.add(new Object[] { info.getServiceId(), info.getPayChannel(),info.getPlayerChannel(),info.getPlayerId(),info.getProductId(),info.getRechargeTime(),info.getMoney(),info.getOrderNum(),info.getCount(),info.getCountAll()});
+            paramsList.add(new Object[] { info.getServiceId(), info.getPayChannel(), info.getPlayerChannel(), info.getPlayerId(), info.getProductId(), info.getRechargeTime(), info.getMoney(), info.getOrderNum(), info.getCount(), info.getCountAll()});
         }
         String tableName = today + "_tab_recharge_info";
         jdbcw.doBatch("insert into " + tableName + " (`service_id`,`pay_channel`,`player_channel`,`player_id`,`product_id`,`recharge_time`,`money`,`order_num`,`count`,`count_all`) values (?,?,?,?,?,?,?,?,?,?)", paramsList);
+    }
+
+    public LoginInfo getLoginInfo(String today, int playerId) {
+        if (loginInfoMap.containsKey(playerId)) return loginInfoMap.get(playerId);
+        LoginInfo info = new LoginInfo();
+        String sql = "select `id`,`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name` from "+today+"_tab_login_info where player_id=?";
+        jdbcw.doQuery(sql, new Object[]{playerId}, new ExecuteCallBack() {
+            @Override
+            public void call(ResultSet rs) {
+                try {
+                    while(rs.next()){
+                        info.setId(rs.getInt(1));
+                        info.setServiceId(rs.getInt(2));
+                        info.setChannelId(rs.getInt(3));
+                        info.setAccountId(rs.getInt(4));
+                        info.setPlayerId(rs.getInt(5));
+                        info.setDeviceMac(rs.getString(6));
+                        info.setDeviceName(rs.getString(7));
+                        info.setSystemName(rs.getString(8));
+                        info.setSystemVersion(rs.getString(9));
+                        info.setAppVersion(rs.getString(10));
+                        info.setLoginTime(rs.getDate(11));
+                        info.setLogoutTime(rs.getDate(12));
+                        info.setOnlineTime(rs.getInt(13));
+                        info.setLoginIp(rs.getString(14));
+                        info.setDiamond(rs.getInt(15));
+                        info.setGold(rs.getInt(16));
+                        info.setVigor(rs.getInt(17));
+                        info.setPlayerLevel(rs.getInt(18));
+                        info.setAccountName(rs.getString(19));
+                        info.setPlayerName(rs.getString(20));
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        if (info.getId() != 0) {
+            loginInfoMap.put(info.getPlayerId(), info);
+            return info;
+        }
+        return null;
+    }
+
+    public void saveLoginInfoBatch(String today, List<LoginInfo> loginList) {
+        createLoginInfo(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (LoginInfo info : loginList) {
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getAccountId(), info.getPlayerId(), info.getDeviceMac(), info.getDeviceName(), info.getSystemName(), info.getSystemVersion(), info.getAppVersion(), info.getLoginTime(), info.getLogoutTime(), info.getOnlineTime(), info.getLoginIp(), info.getDiamond(), info.getGold(), info.getVigor(), info.getPlayerLevel(), info.getAccountName(), info.getPlayerName()});
+        }
+        String tableName = today + "_tab_login_info";
+        jdbcw.doBatch("insert into " + tableName + " (`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
     }
 
     public void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {
@@ -352,17 +414,16 @@ public class BaseDao implements Serializable {
         String tableName = today + "_tab_device_new_count";
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,device_mac,create_time) values (?,?,?,?)", paramsList);
     }
-    
+
     public void saveOnlineInfoBatch(String today, List<OnlineInfo> onlineInfoList) {
         createOnlineInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (OnlineInfo info : onlineInfoList) {
-            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(),info.getDateMinute(),info.getOnlineNum()});
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getDateMinute(), info.getOnlineNum()});
         }
         String tableName = today + "_tab_online_info";
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,date_minute,online_num) values (?,?,?,?)", paramsList);
     }
-
 
     public void saveAccountInfoBatch(List<AccountInfo> accountList) {
         List<Object[]> paramsList = new ArrayList<>();
@@ -372,17 +433,63 @@ public class BaseDao implements Serializable {
         String tableName = "tab_account_info";
         jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
-
+    public void updateLoginInfoBatch(String today,List<LoginInfo> loginInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (LoginInfo info : loginInfoList) {
+            paramsList.add(new Object[] {  info.getPlayerId()});
+            loginInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update "+today+"_tab_login_info set  where player_id=?", paramsList);
+    }
+    
+    
     public void updatePlayerInfoBatch(List<PlayerInfo> playerInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getPlayerLevel(), info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), 
-                    info.getFirstChannel(),info.getFirstMoney(),info.getFirstRecharge(),info.getFirstLevel(),info.getTotalMoney(),info.getRechargeNum(),info.getWltv(),info.getMltv(),info.getPlayerId()});
+            paramsList.add(new Object[] { info.getPlayerLevel(), info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId()});
             playerInfoMap.put(info.getPlayerId(), info);
         }
         jdbcw.doBatch("update tab_player_info set player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=?,first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
     }
-    
+
+    private void createLoginInfo(String today) {
+        StringBuffer createSql = new StringBuffer();
+        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_login_info`(")//
+                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
+                .append("`service_id` int(11) DEFAULT NULL,")//
+                .append("`channel_id` int(11) DEFAULT NULL,")//
+                .append("`player_channel` int(11) DEFAULT NULL,")//
+                .append("`account_id` int(11) DEFAULT NULL,")//
+                .append("`player_id` int(11) DEFAULT NULL,")//
+                .append("`device_mac` varchar(255) DEFAULT NULL,")//
+                .append("`device_name` varchar(255) DEFAULT NULL,")//
+                .append("`system_name` varchar(255) DEFAULT NULL,")//
+                .append("`system_version` varchar(255) DEFAULT NULL,")//
+                .append("`app_version` varchar(255) DEFAULT NULL,")//
+                .append("`login_time` datetime DEFAULT NULL,")//
+                .append("`logout_time` datetime DEFAULT NULL,")//
+                .append("`online_time` int(11) DEFAULT NULL,")//
+                .append("`login_ip` varchar(32) DEFAULT NULL,")//
+                .append("`diamond` int(11) DEFAULT '0',")//
+                .append("`gold` int(11) DEFAULT '0',")//
+                .append("`vigor` int(11) DEFAULT '0',")//
+                .append("`player_level` int(11) DEFAULT '0',")//
+                .append("`account_name` varchar(255) DEFAULT NULL,")//
+                .append("`player_name` varchar(255) DEFAULT NULL,")//
+                .append("PRIMARY KEY (`id`),")//
+                .append("KEY `service_id` (`service_id`),")//
+                .append("KEY `channel_id` (`channel_id`),")//
+                .append("KEY `player_channel` (`player_channel`),")//
+                .append("KEY `account_id` (`account_id`),")//
+                .append("KEY `player_id` (`player_id`),")//
+                .append("KEY `device_mac` (`device_mac`),")//
+                .append("KEY `login_time` (`login_time`),")//
+                .append("KEY `logout_time` (`logout_time`),")//
+                .append("KEY `online_time` (`online_time`)")//
+                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
+        jdbcw.executeSQL(createSql.toString());
+    }
+
     /**
     * 创建登陆汇总日志sql
     * 
@@ -449,20 +556,22 @@ public class BaseDao implements Serializable {
                 .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
         jdbcw.executeSQL(createSql.toString());
     }
+
     private void createOnlineInfo(String today) {
         StringBuffer createSql = new StringBuffer();
         createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_online_info`(")//
-        .append("`id` bigint(11) NOT NULL AUTO_INCREMENT,")//
-        .append("`service_id` int(11) DEFAULT NULL,")//
-        .append("`channel_id` int(11) DEFAULT NULL,")//
-        .append("`date_minute` int(11) DEFAULT NULL,")// 记录时间(分钟)
-        .append("`online_num` int(11) DEFAULT NULL,")//
-        .append("PRIMARY KEY (`id`),")//
-        .append("KEY `service_id` (`service_id`),")//
-        .append("KEY `date_minute` (`date_minute`)")//
-        .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
+                .append("`id` bigint(11) NOT NULL AUTO_INCREMENT,")//
+                .append("`service_id` int(11) DEFAULT NULL,")//
+                .append("`channel_id` int(11) DEFAULT NULL,")//
+                .append("`date_minute` int(11) DEFAULT NULL,")// 记录时间(分钟)
+                .append("`online_num` int(11) DEFAULT NULL,")//
+                .append("PRIMARY KEY (`id`),")//
+                .append("KEY `service_id` (`service_id`),")//
+                .append("KEY `date_minute` (`date_minute`)")//
+                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
         jdbcw.executeSQL(createSql.toString());
     }
+
     private void createRechargeInfo(String today) {
         StringBuffer createSql = new StringBuffer();
         createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_recharge_info`(")//

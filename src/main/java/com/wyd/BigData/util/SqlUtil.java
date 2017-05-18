@@ -27,8 +27,6 @@ public class SqlUtil {
                     int c = 1;
                     while (rs.next()) {
                         String column = rs.getString(1);
-                        
-                          
                         s = first ? "" : ",";
                         columns += s + "`" + column + "`";
                         params += s + "?";
@@ -47,20 +45,21 @@ public class SqlUtil {
                             }
                         }
                         if (!column.equals("id")) {
-                        getBean += s + "info.get" + method + "()";}
+                            getBean += s + "info.get" + method + "()";
+                        }
                         String datatype = rs.getString(2).toLowerCase();
-                        if(method.indexOf("Is")!=-1 && datatype.equals("tinyint")){
+                        if (method.indexOf("Is") != -1 && datatype.equals("tinyint")) {
                             setBean += "info.set" + method + "(rs.getBoolean(" + c + "));\n";
-                        }else if (datatype.equals("int")) {
+                        } else if (datatype.equals("int")) {
                             setBean += "info.set" + method + "(rs.getInt(" + c + "));\n";
                         } else if (datatype.equals("datetime")) {
                             setBean += "info.set" + method + "(rs.getDate(" + c + "));\n";
-                        } else if(datatype.equals("double")){
+                        } else if (datatype.equals("double")) {
                             setBean += "info.set" + method + "(rs.getDate(" + c + "));\n";
-                        }else {
+                        } else {
                             setBean += "info.set" + method + "(rs.getString(" + c + "));\n";
                         }
-                        setBean= setBean.replace("setIs", "set");
+                        setBean = setBean.replace("setIs", "set");
                         c++;
                         first = false;
                     }
@@ -78,10 +77,8 @@ public class SqlUtil {
         });
     }
 
-    
-
     public static void main(String[] args) {
-        //SqlUtil.getSQLStr("tab_player_info", "test");
+        SqlUtil.getSQLStr("2016_11_15_tab_login_info", "test");
         List<PlayerInfo> playerInfoList = new ArrayList<>();
         PlayerInfo playerInfo = new PlayerInfo();
         playerInfo.setPlayerId(1);
@@ -98,10 +95,10 @@ public class SqlUtil {
         playerInfo.setWltv(2);
         playerInfoList.add(playerInfo);
         BaseDao dao = BaseDao.getInstance();
-        //dao.savePlayerInfoBatch(playerInfoList);            
-       // dao.updatePlayerInfoBatch(playerInfoList);
-       // playerInfo=dao.getPlayerInfo(1);
-      //  System.out.println(playerInfo.getPlayerName()+" "+playerInfo.getMltv()+" "+playerInfo.getWltv());
+        // dao.savePlayerInfoBatch(playerInfoList);
+        // dao.updatePlayerInfoBatch(playerInfoList);
+        // playerInfo=dao.getPlayerInfo(1);
+        // System.out.println(playerInfo.getPlayerName()+" "+playerInfo.getMltv()+" "+playerInfo.getWltv());
         List<OnlineInfo> onlineInfoList = new ArrayList<>();
         OnlineInfo info = new OnlineInfo();
         info.setServiceId(1);
@@ -109,8 +106,6 @@ public class SqlUtil {
         info.setOnlineNum(3);
         info.setChannelId(5);
         onlineInfoList.add(info);
-        dao.saveOnlineInfoBatch("2017_05_18", onlineInfoList);
-        
-        
+        // dao.saveOnlineInfoBatch("2017_05_18", onlineInfoList);
     }
 }

@@ -22,9 +22,12 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
+import com.wyd.BigData.bean.AccountInfo;
+import com.wyd.BigData.bean.LoginInfo;
 import com.wyd.BigData.bean.LoginSumInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
+import com.wyd.BigData.util.StringUtil;
 import scala.Tuple2;
 public class LoginRDD implements Serializable {
     /**
@@ -114,12 +117,13 @@ public class LoginRDD implements Serializable {
                 }
             });
         }
-        //更新playerInfo
+        //更新playerInfo,loginInfo
         loingRDD.foreachPartition(new VoidFunction<Iterator<SparkFlumeEvent>>() {
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 BaseDao dao = BaseDao.getInstance();
                 List<PlayerInfo> playerInfoList = new ArrayList<>();
+                List<LoginInfo> loginInfoList = new ArrayList<>();
                 while (t.hasNext()) {                    
                     String line = new String(t.next().event().getBody().array());
                     String[] datas = SPACE.split(line);
@@ -131,14 +135,43 @@ public class LoginRDD implements Serializable {
                     Date dataTime = new Date(Long.parseLong(datas[1]));
                     info.setLoginTime(dataTime);                    
                     info.setLoginNum(info.getLoginNum() + 1);
-                    if (datas.length > 12) {                        
-                        info.setDiamond(Integer.parseInt(datas[12]));
-                        info.setGold(Integer.parseInt(datas[13]));
-                        info.setVigor(Integer.parseInt(datas[14]));
+                    LoginInfo login = new LoginInfo();
+                    login.setServiceId(Integer.parseInt(datas[2]));
+                    login.setChannelId(Integer.parseInt(datas[3]));
+                    login.setAccountId(Integer.parseInt(datas[4]));
+                    login.setPlayerId(Integer.parseInt(datas[5]));
+                    login.setDeviceMac(StringUtil.filterOffUtf8Mb4(datas[6]));
+                    login.setDeviceName(StringUtil.filterOffUtf8Mb4(datas[7]));
+                    login.setSystemName(StringUtil.filterOffUtf8Mb4(datas[8]));
+                    login.setPlayerChannel(info.getChannelId());
+                    if (datas.length > 9) {
+                        login.setSystemVersion(datas[9]);
+                        login.setAppVersion(datas[10]);
+                    }
+                    login.setLoginTime(dataTime);
+                    if (datas.length > 11) {
+                        login.setLoginIp(datas[11]);
+                    }
+                    if (datas.length > 12) {
+                        int diamond=Integer.parseInt(datas[12]),gold=Integer.parseInt(datas[13]),vigor=Integer.parseInt(datas[14]);
+                        login.setDiamond(diamond);
+                        login.setGold(gold);
+                        login.setVigor(vigor);                    
+                        info.setDiamond(diamond);
+                        info.setGold(gold);
+                        info.setVigor(vigor);
+                    }
+                    login.setPlayerLevel(info.getPlayerLevel());
+                    login.setPlayerName(info.getPlayerName());
+                    AccountInfo accountInfo = dao.getAccountInfo(Integer.parseInt(datas[4]));
+                    if (accountInfo != null) {
+                        login.setAccountName(accountInfo.getAccountName());
                     }
                     playerInfoList.add(info);
+                    loginInfoList.add(login);
                 }
                 dao.updatePlayerInfoBatch(playerInfoList);
+                dao.saveLoginInfoBatch(today, loginInfoList);
                 
             }
         });
