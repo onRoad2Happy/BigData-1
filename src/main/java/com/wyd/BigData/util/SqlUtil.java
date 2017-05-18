@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import com.wyd.BigData.JDBC.ExecuteCallBack;
 import com.wyd.BigData.JDBC.JDBCWrapper;
+import com.wyd.BigData.bean.OnlineInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.bean.RechargeInfo;
 import com.wyd.BigData.dao.BaseDao;
@@ -101,20 +102,14 @@ public class SqlUtil {
        // dao.updatePlayerInfoBatch(playerInfoList);
        // playerInfo=dao.getPlayerInfo(1);
       //  System.out.println(playerInfo.getPlayerName()+" "+playerInfo.getMltv()+" "+playerInfo.getWltv());
-        List<RechargeInfo> list = new ArrayList<>();
-        RechargeInfo info = new RechargeInfo();
+        List<OnlineInfo> onlineInfoList = new ArrayList<>();
+        OnlineInfo info = new OnlineInfo();
         info.setServiceId(1);
-        info.setPayChannel(1);
-        info.setPlayerChannel(2);
-        info.setPlayerId(1);
-        info.setProductId(3);
-        info.setRechargeTime(new Date());
-        info.setMoney(12);
-        info.setOrderNum("12-12-12");
-        info.setCount(123);
-        info.setCountAll(1234);
-        list.add(info);
-        dao.saveRechargeInfoBatch("2017_05_18", list);
+        info.setDateMinute(2);
+        info.setOnlineNum(3);
+        info.setChannelId(5);
+        onlineInfoList.add(info);
+        dao.saveOnlineInfoBatch("2017_05_18", onlineInfoList);
         
         
     }

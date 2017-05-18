@@ -13,6 +13,7 @@ import com.wyd.BigData.bean.AccountNewCount;
 import com.wyd.BigData.bean.DeviceInfo;
 import com.wyd.BigData.bean.DeviceNewCount;
 import com.wyd.BigData.bean.LoginSumInfo;
+import com.wyd.BigData.bean.OnlineInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.bean.PlayerNewCount;
 import com.wyd.BigData.bean.RechargeInfo;
@@ -351,6 +352,17 @@ public class BaseDao implements Serializable {
         String tableName = today + "_tab_device_new_count";
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,device_mac,create_time) values (?,?,?,?)", paramsList);
     }
+    
+    public void saveOnlineInfoBatch(String today, List<OnlineInfo> onlineInfoList) {
+        createOnlineInfo(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (OnlineInfo info : onlineInfoList) {
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(),info.getDateMinute(),info.getOnlineNum()});
+        }
+        String tableName = today + "_tab_online_info";
+        jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,date_minute,online_num) values (?,?,?,?)", paramsList);
+    }
+
 
     public void saveAccountInfoBatch(List<AccountInfo> accountList) {
         List<Object[]> paramsList = new ArrayList<>();
@@ -370,7 +382,7 @@ public class BaseDao implements Serializable {
         }
         jdbcw.doBatch("update tab_player_info set player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=?,first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
     }
-
+    
     /**
     * 创建登陆汇总日志sql
     * 
@@ -435,6 +447,20 @@ public class BaseDao implements Serializable {
                 .append("KEY `dnc_service_id` (`service_id`),")//
                 .append("KEY `dnc_channel_id` (`channel_id`)")//
                 .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
+        jdbcw.executeSQL(createSql.toString());
+    }
+    private void createOnlineInfo(String today) {
+        StringBuffer createSql = new StringBuffer();
+        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_online_info`(")//
+        .append("`id` bigint(11) NOT NULL AUTO_INCREMENT,")//
+        .append("`service_id` int(11) DEFAULT NULL,")//
+        .append("`channel_id` int(11) DEFAULT NULL,")//
+        .append("`date_minute` int(11) DEFAULT NULL,")// 记录时间(分钟)
+        .append("`online_num` int(11) DEFAULT NULL,")//
+        .append("PRIMARY KEY (`id`),")//
+        .append("KEY `service_id` (`service_id`),")//
+        .append("KEY `date_minute` (`date_minute`)")//
+        .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
         jdbcw.executeSQL(createSql.toString());
     }
     private void createRechargeInfo(String today) {

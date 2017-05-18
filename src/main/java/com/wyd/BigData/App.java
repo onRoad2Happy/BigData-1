@@ -12,6 +12,8 @@ import org.apache.spark.streaming.flume.FlumeUtils;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
 import com.wyd.BigData.RDD.CreateRDD;
 import com.wyd.BigData.RDD.LoginRDD;
+import com.wyd.BigData.RDD.LogoutRDD;
+import com.wyd.BigData.RDD.OnlineRDD;
 import com.wyd.BigData.RDD.RechargeRDD;
 public class App {
     public static App               instance = null;
@@ -45,6 +47,11 @@ public class App {
                 new LoginRDD().call(rdd, spark);
                 // 充值数据
                 new RechargeRDD().call(rdd, spark);
+                // 登出
+                new LogoutRDD().call(rdd, spark);
+                // 在线人数
+                new OnlineRDD().call(rdd, spark);
+                
             }
         });
         ssc.start();
