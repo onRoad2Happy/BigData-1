@@ -7,6 +7,7 @@ import java.util.List;
 import com.wyd.BigData.JDBC.ExecuteCallBack;
 import com.wyd.BigData.JDBC.JDBCWrapper;
 import com.wyd.BigData.bean.PlayerInfo;
+import com.wyd.BigData.bean.RechargeInfo;
 import com.wyd.BigData.dao.BaseDao;
 public class SqlUtil {
     /**
@@ -25,10 +26,8 @@ public class SqlUtil {
                     int c = 1;
                     while (rs.next()) {
                         String column = rs.getString(1);
-                        if (column.equals("id")) {
-                            c++;
-                            continue;
-                        }
+                        
+                          
                         s = first ? "" : ",";
                         columns += s + "`" + column + "`";
                         params += s + "?";
@@ -46,19 +45,26 @@ public class SqlUtil {
                                 method += other;
                             }
                         }
-                        getBean += s + "info.get" + method + "()";
+                        if (!column.equals("id")) {
+                        getBean += s + "info.get" + method + "()";}
                         String datatype = rs.getString(2).toLowerCase();
-                        if (datatype.equals("int")) {
+                        if(method.indexOf("Is")!=-1 && datatype.equals("tinyint")){
+                            setBean += "info.set" + method + "(rs.getBoolean(" + c + "));\n";
+                        }else if (datatype.equals("int")) {
                             setBean += "info.set" + method + "(rs.getInt(" + c + "));\n";
                         } else if (datatype.equals("datetime")) {
                             setBean += "info.set" + method + "(rs.getDate(" + c + "));\n";
-                        } else {
+                        } else if(datatype.equals("double")){
+                            setBean += "info.set" + method + "(rs.getDate(" + c + "));\n";
+                        }else {
                             setBean += "info.set" + method + "(rs.getString(" + c + "));\n";
                         }
+                        setBean= setBean.replace("setIs", "set");
                         c++;
                         first = false;
                     }
                     String selectSql = "select " + columns + " from " + tableName;
+                    columns = columns.replace("`id`,", "");
                     String insertSql = "insert into " + tableName + " (" + columns + ") values (" + params + ")";
                     System.out.println(selectSql);
                     System.out.println(insertSql);
@@ -87,13 +93,29 @@ public class SqlUtil {
         playerInfo.setPlayerSex("0".equals(1) ? "男" : "女");
         playerInfo.setLoginTime(playerInfo.getCreateTime());
         playerInfo.setVigor(11);
+        playerInfo.setMltv(1);
+        playerInfo.setWltv(2);
         playerInfoList.add(playerInfo);
         BaseDao dao = BaseDao.getInstance();
-        // dao.savePlayerInfoBatch(playerInfoList);
-        // dao.updatePlayerInfoBatch(playerInfoList);        
-        // dao.updatePlayerInfoBatch(playerInfoList);
-        playerInfo=dao.getPlayerInfo(208932);
-        System.out.println(playerInfo.getPlayerName()+" "+playerInfo.getVigor());
+        //dao.savePlayerInfoBatch(playerInfoList);            
+       // dao.updatePlayerInfoBatch(playerInfoList);
+       // playerInfo=dao.getPlayerInfo(1);
+      //  System.out.println(playerInfo.getPlayerName()+" "+playerInfo.getMltv()+" "+playerInfo.getWltv());
+        List<RechargeInfo> list = new ArrayList<>();
+        RechargeInfo info = new RechargeInfo();
+        info.setServiceId(1);
+        info.setPayChannel(1);
+        info.setPlayerChannel(2);
+        info.setPlayerId(1);
+        info.setProductId(3);
+        info.setRechargeTime(new Date());
+        info.setMoney(12);
+        info.setOrderNum("12-12-12");
+        info.setCount(123);
+        info.setCountAll(1234);
+        list.add(info);
+        dao.saveRechargeInfoBatch("2017_05_18", list);
+        
         
     }
 }

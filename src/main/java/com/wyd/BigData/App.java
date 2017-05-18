@@ -12,6 +12,7 @@ import org.apache.spark.streaming.flume.FlumeUtils;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
 import com.wyd.BigData.RDD.CreateRDD;
 import com.wyd.BigData.RDD.LoginRDD;
+import com.wyd.BigData.RDD.RechargeRDD;
 public class App {
     public static App               instance = null;
     private PropertiesConfiguration config;
@@ -42,6 +43,8 @@ public class App {
                 new CreateRDD().call(rdd, spark);
                 // 登陆数据入库
                 new LoginRDD().call(rdd, spark);
+                // 充值数据
+                new RechargeRDD().call(rdd, spark);
             }
         });
         ssc.start();
