@@ -128,13 +128,13 @@ public class LoginRDD implements Serializable {
                     String line = new String(t.next().event().getBody().array());
                     String[] datas = SPACE.split(line);
                     int playerId = Integer.parseInt(datas[5]);
-                    PlayerInfo info = dao.getPlayerInfo(playerId);
-                    if(info==null){
+                    PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+                    if(playerInfo==null){
                         continue;
                     }
                     Date dataTime = new Date(Long.parseLong(datas[1]));
-                    info.setLoginTime(dataTime);                    
-                    info.setLoginNum(info.getLoginNum() + 1);
+                    playerInfo.setLoginTime(dataTime);                    
+                    playerInfo.setLoginNum(playerInfo.getLoginNum() + 1);
                     LoginInfo login = new LoginInfo();
                     login.setServiceId(Integer.parseInt(datas[2]));
                     login.setChannelId(Integer.parseInt(datas[3]));
@@ -143,7 +143,7 @@ public class LoginRDD implements Serializable {
                     login.setDeviceMac(StringUtil.filterOffUtf8Mb4(datas[6]));
                     login.setDeviceName(StringUtil.filterOffUtf8Mb4(datas[7]));
                     login.setSystemName(StringUtil.filterOffUtf8Mb4(datas[8]));
-                    login.setPlayerChannel(info.getChannelId());
+                    login.setPlayerChannel(playerInfo.getChannelId());
                     if (datas.length > 9) {
                         login.setSystemVersion(datas[9]);
                         login.setAppVersion(datas[10]);
@@ -157,17 +157,17 @@ public class LoginRDD implements Serializable {
                         login.setDiamond(diamond);
                         login.setGold(gold);
                         login.setVigor(vigor);                    
-                        info.setDiamond(diamond);
-                        info.setGold(gold);
-                        info.setVigor(vigor);
+                        playerInfo.setDiamond(diamond);
+                        playerInfo.setGold(gold);
+                        playerInfo.setVigor(vigor);
                     }
-                    login.setPlayerLevel(info.getPlayerLevel());
-                    login.setPlayerName(info.getPlayerName());
+                    login.setPlayerLevel(playerInfo.getPlayerLevel());
+                    login.setPlayerName(playerInfo.getPlayerName());
                     AccountInfo accountInfo = dao.getAccountInfo(Integer.parseInt(datas[4]));
                     if (accountInfo != null) {
                         login.setAccountName(accountInfo.getAccountName());
                     }
-                    playerInfoList.add(info);
+                    playerInfoList.add(playerInfo);
                     loginInfoList.add(login);
                 }
                 dao.updatePlayerInfoBatch(playerInfoList);

@@ -13,6 +13,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
+import com.wyd.BigData.bean.LoginInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.bean.RechargeInfo;
 import com.wyd.BigData.dao.BaseDao;
@@ -32,17 +33,36 @@ public class LogoutRDD implements Serializable {
         if (logoutRDD.count() == 0) return;
         LogLog.debug("logoutRDD count:" + logoutRDD.count());
         logoutRDD.foreachPartition(new VoidFunction<Iterator<SparkFlumeEvent>>() {
-            BaseDao dao = BaseDao.getInstance();
-            List<PlayerInfo> playerInfoList = new ArrayList<>();
-            List<RechargeInfo> rechargeInfoList = new ArrayList<>();
+            BaseDao            dao              = BaseDao.getInstance();
+            List<PlayerInfo>   playerInfoList   = new ArrayList<>();
+            List<LoginInfo> loginInfoList = new ArrayList<>();
+
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 while (t.hasNext()) {
                     String line = new String(t.next().event().getBody().array());
                     String[] datas = SPACE.split(line);
+                    Date dataTime = new Date(Long.parseLong(datas[1]));
                     int playerId = Integer.parseInt(datas[2]);
                     PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+                    if (null != playerInfo) {
+                        String lastLoginDay = sf.format(playerInfo.getLoginTime());
+                        LoginInfo loginInfo = dao.getLoginInfo(lastLoginDay, playerId);
+                        if (null != loginInfo) {
+                            loginInfo.setLogoutTime(dataTime);
+                            loginInfo.setOnlineTime((int) (Long.parseLong(datas[3]) / 1000));
+                            loginInfo.setPlayerLevel(playerInfo.getPlayerLevel());
+                            playerInfo.setTotalOnline(playerInfo.getTotalOnline() + loginInfo.getOnlineTime());
+                            if (datas.length > 4) {
+                                playerInfo.setVigor(Integer.parseInt(datas[4]));
+                            }
+                            playerInfoList.add(playerInfo);
+                            loginInfoList.add(loginInfo);                            
+                        }
+                    }
                 }
+                dao.updatePlayerInfoBatch(playerInfoList);
+                dao.updateLoginInfoBatch(loginInfoList,true);
             }
         });
     }

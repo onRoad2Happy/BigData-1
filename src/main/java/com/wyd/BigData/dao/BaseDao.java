@@ -96,7 +96,7 @@ public class BaseDao implements Serializable {
                         accountInfo.setChannelId(rs.getInt(4));
                         accountInfo.setAccountName(rs.getString(5));
                         accountInfo.setAccountPwd(rs.getString(6));
-                        accountInfo.setCreateTime(new Date(rs.getTimestamp(7).getTime()));
+                        accountInfo.setCreateTime(getRsDate(rs.getTimestamp(7)));
                         accountInfo.setDeviceMac(rs.getString(8));
                         accountInfo.setSystemVersion(rs.getString(9));
                         accountInfo.setSystemType(rs.getString(10));
@@ -129,7 +129,7 @@ public class BaseDao implements Serializable {
                                 info.setChannelId(rs.getInt(4));
                                 info.setAccountId(rs.getInt(5));
                                 info.setDeviceMac(rs.getString(6));
-                                info.setCreateTime(new Date(rs.getTimestamp(7).getTime()));
+                                info.setCreateTime(getRsDate(rs.getTimestamp(7)));
                                 info.setPlayerName(rs.getString(8));
                                 info.setPlayerSex(rs.getString(9));
                                 info.setPlayerLevel(rs.getInt(10));
@@ -138,7 +138,7 @@ public class BaseDao implements Serializable {
                                 info.setVipLevel(rs.getInt(13));
                                 info.setSportsLevel(rs.getInt(14));
                                 info.setRankingLevel(rs.getInt(15));
-                                info.setLoginTime(new Date(rs.getTimestamp(16).getTime()));
+                                info.setLoginTime(getRsDate(rs.getTimestamp(16)));
                                 info.setTwo(rs.getBoolean(17));
                                 info.setThird(rs.getBoolean(18));
                                 info.setFour(rs.getBoolean(19));
@@ -153,8 +153,8 @@ public class BaseDao implements Serializable {
                                 info.setFirstChannel(rs.getInt(28));
                                 info.setFirstMoney(rs.getDouble(29));
                                 info.setFirstLevel(rs.getInt(30));
-                                info.setFirstRecharge(new Date(rs.getTimestamp(31).getTime()));
-                                info.setFirstCostTime(new Date(rs.getTimestamp(32).getTime()));
+                                info.setFirstRecharge(getRsDate(rs.getTimestamp(31)));
+                                info.setFirstCostTime(getRsDate(rs.getTimestamp(32)));
                                 info.setFirstCostLevel(rs.getInt(33));
                                 info.setFirstCostNum(rs.getInt(34));
                                 info.setFirstCostItem(rs.getInt(35));
@@ -248,7 +248,7 @@ public class BaseDao implements Serializable {
                         deviceInfo.setServiceId(rs.getInt(2));
                         deviceInfo.setChannelId(rs.getInt(3));
                         deviceInfo.setDeviceMac(rs.getString(4));
-                        deviceInfo.setCreateTime(new Date(rs.getTimestamp(5).getTime()));
+                        deviceInfo.setCreateTime(getRsDate(rs.getTimestamp(5)));
                         deviceInfo.setDeviceName(rs.getString(6));
                         deviceInfo.setSystemName(rs.getString(7));
                         deviceInfo.setSystemVersion(rs.getString(8));
@@ -356,7 +356,9 @@ public class BaseDao implements Serializable {
         String tableName = today + "_tab_recharge_info";
         jdbcw.doBatch("insert into " + tableName + " (`service_id`,`pay_channel`,`player_channel`,`player_id`,`product_id`,`recharge_time`,`money`,`order_num`,`count`,`count_all`) values (?,?,?,?,?,?,?,?,?,?)", paramsList);
     }
-
+    private Date getRsDate(java.sql.Timestamp timestamp){
+       return timestamp==null?null: new Date(timestamp.getTime());
+    }
     public LoginInfo getLoginInfo(String today, int playerId) {
         if (loginInfoMap.containsKey(playerId)) return loginInfoMap.get(playerId);
         LoginInfo info = new LoginInfo();
@@ -376,8 +378,8 @@ public class BaseDao implements Serializable {
                         info.setSystemName(rs.getString(8));
                         info.setSystemVersion(rs.getString(9));
                         info.setAppVersion(rs.getString(10));
-                        info.setLoginTime(new Date(rs.getTimestamp(11).getTime()));
-                        info.setLogoutTime(new Date(rs.getTimestamp(12).getTime()));
+                        info.setLoginTime(getRsDate(rs.getTimestamp(11)));
+                        info.setLogoutTime(getRsDate(rs.getTimestamp(12)));
                         info.setOnlineTime(rs.getInt(13));
                         info.setLoginIp(rs.getString(14));
                         info.setDiamond(rs.getInt(15));
@@ -437,8 +439,12 @@ public class BaseDao implements Serializable {
         String tableName = "tab_account_info";
         jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
-
-    public void updateLoginInfoBatch(List<LoginInfo> loginInfoList) {
+/**
+ * 当登出时使用logout  ture
+ * @param loginInfoList
+ * @param logout
+ */
+    public void updateLoginInfoBatch(List<LoginInfo> loginInfoList,boolean logout) {
         Map<String, List<Object[]>> dayParamMap = new HashMap<>();
         for (LoginInfo info : loginInfoList) {
             String today = sf.format(info.getLoginTime());
@@ -451,7 +457,11 @@ public class BaseDao implements Serializable {
             loginInfoMap.put(info.getPlayerId(), info);
         }
         for (String today : dayParamMap.keySet()) {
-            jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=?", dayParamMap.get(today));
+            if(logout){
+                jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=? and logout_time is null", dayParamMap.get(today));
+            }else{
+                jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=?", dayParamMap.get(today));
+            }
         }
     }
 
