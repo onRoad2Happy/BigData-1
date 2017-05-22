@@ -20,7 +20,7 @@ public class JDBCWrapper implements Serializable {
     private int                                    connCount        = 0;
     private int                                    connMaxCount     = 5;
     private int                                    connMinCount     = 2;
-    String                                         url              = null;
+    private String                                         url              = null;
 
     static {
         try {
@@ -30,7 +30,7 @@ public class JDBCWrapper implements Serializable {
         }
     }
 
-    public JDBCWrapper() {
+    private JDBCWrapper() {
         PropertiesConfiguration config = Global.getInstance().config;
         url = config.getString("jdbc.url");
         for (int i = 0; i < connMinCount; i++) {
@@ -39,9 +39,7 @@ public class JDBCWrapper implements Serializable {
                 conn = DriverManager.getConnection(url);
                 connPool.put(conn);
                 connCount++;
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (SQLException  | InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -58,7 +56,7 @@ public class JDBCWrapper implements Serializable {
         return instance;
     }
 
-    public Connection getConnction() throws Exception {
+    private Connection getConnction() throws Exception {
         // System.out.println("connPool:" + connPool.size());
         Connection conn = connPool.poll();
         while (conn == null && connCount < connMaxCount) {            
@@ -71,14 +69,13 @@ public class JDBCWrapper implements Serializable {
         return conn;
     }
 
-    public boolean executeSQL(String sql) {
-        boolean result = false;
+    public void executeSQL(String sql) {
         Connection conn = null;
         PreparedStatement statement = null;
         try {
             conn = getConnction();
             statement = conn.prepareStatement(sql);
-            result = statement.execute();
+            statement.execute();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -97,18 +94,14 @@ public class JDBCWrapper implements Serializable {
                 }
             }
         }
-        return result;
+
     }
 
     /**
      * 批量提交
      */
-    public int[] doBatch(String sql, List<Object[]> paramsList) {
+    public void doBatch(String sql, List<Object[]> paramsList) {
         Connection conn = null;
-        int[] result = null;
-        if (paramsList == null || paramsList.size() == 0) {
-            return result;
-        }
         PreparedStatement statement = null;
         try {
             conn = getConnction();
@@ -147,14 +140,14 @@ public class JDBCWrapper implements Serializable {
                 }
             }
         }
-        return result;
+
     }
 
     /**
      * 执行查询
-     * @param sql
-     * @param params
-     * @param callBack
+     * @param sql  sql
+     * @param params 参数
+     * @param callBack 返回
      */
     public void doQuery(String sql, Object[] params, ExecuteCallBack callBack) {
         Connection conn = null;
@@ -190,7 +183,7 @@ public class JDBCWrapper implements Serializable {
 
     public static void main(String[] args) {
         JDBCWrapper jdbcw = JDBCWrapper.getInstance();
-         List<String> names = new ArrayList<String>();
+         List<String> names = new ArrayList<>();
          List<Object[]> paramsList = new ArrayList<>();
          paramsList.add(new Object[] { "spark"});
          paramsList.add(new Object[] { "scala"});

@@ -29,13 +29,13 @@ public class BaseDao implements Serializable {
     private static SimpleDateFormat sf               = new SimpleDateFormat("yyyy_MM_dd");
     private static final String     TAB_DIRECTORY    = "";
     private static BaseDao          instance         = null;
-    JDBCWrapper                     jdbcw            = null;
-    Map<Integer, AccountInfo>       accountInfoMap   = null;
-    Map<String, DeviceInfo>         deviceInfoMap    = null;
-    Map<Integer, PlayerInfo>        playerInfoMap    = null;
-    Map<Integer, LoginInfo>         loginInfoMap     = null;
+    private JDBCWrapper                     jdbcw            = null;
+    private Map<Integer, AccountInfo>       accountInfoMap   = null;
+    private Map<String, DeviceInfo>         deviceInfoMap    = null;
+    private Map<Integer, PlayerInfo>        playerInfoMap    = null;
+    private Map<Integer, LoginInfo>         loginInfoMap     = null;
 
-    public BaseDao() {
+    private BaseDao() {
         loginInfoMap = new LinkedHashMap<Integer, LoginInfo>() {
             private static final long serialVersionUID = 1L;
 
@@ -275,13 +275,6 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("insert into " + tableName + " (`service_id` ,`channel_id`,`device_mac`,`create_time`, `device_name`,`system_name`,`system_version`,`app_version`) values (?,?,?,?,?,?,?,?)", paramsList);
     }
 
-    public void delete(String tableName) {
-        jdbcw.executeSQL("delete from " + tableName);
-    }
-
-    public void createTabLogin(String tableName) {
-        jdbcw.executeSQL("CREATE TABLE IF NOT EXISTS " + tableName + " (server_id INT,channel_id INT, player_id INT)");
-    }
 
     public List<LoginSumInfo> getAllLoginSumInfo(String today) {
         List<LoginSumInfo> infoList = new ArrayList<>();
@@ -441,27 +434,18 @@ public class BaseDao implements Serializable {
     }
 /**
  * 当登出时使用logout  ture
- * @param loginInfoList
- * @param logout
+ * @param loginInfoList  登陆实体 *
  */
-    public void updateLoginInfoBatch(List<LoginInfo> loginInfoList,boolean logout) {
+    public void updateLoginInfoBatch(List<LoginInfo> loginInfoList) {
         Map<String, List<Object[]>> dayParamMap = new HashMap<>();
         for (LoginInfo info : loginInfoList) {
             String today = sf.format(info.getLoginTime());
-            List<Object[]> paramsList = dayParamMap.get(today);
-            if (paramsList == null) {
-                paramsList = new ArrayList<>();
-                dayParamMap.put(today, paramsList);
-            }
+            List<Object[]> paramsList = dayParamMap.computeIfAbsent(today,x->new ArrayList<>());
             paramsList.add(new Object[] {info.getLogoutTime(),info.getOnlineTime(),info.getPlayerLevel(), info.getPlayerId()});
             loginInfoMap.put(info.getPlayerId(), info);
         }
         for (String today : dayParamMap.keySet()) {
-            if(logout){
-                jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=? and logout_time is null", dayParamMap.get(today));
-            }else{
-                jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=?", dayParamMap.get(today));
-            }
+            jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=? and logout_time is null", dayParamMap.get(today));
         }
     }
 
@@ -475,148 +459,142 @@ public class BaseDao implements Serializable {
     }
 
     private void createLoginInfo(String today) {
-        StringBuffer createSql = new StringBuffer();
-        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_login_info`(")//
-                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
-                .append("`service_id` int(11) DEFAULT NULL,")//
-                .append("`channel_id` int(11) DEFAULT NULL,")//
-                .append("`player_channel` int(11) DEFAULT NULL,")//
-                .append("`account_id` int(11) DEFAULT NULL,")//
-                .append("`player_id` int(11) DEFAULT NULL,")//
-                .append("`device_mac` varchar(255) DEFAULT NULL,")//
-                .append("`device_name` varchar(255) DEFAULT NULL,")//
-                .append("`system_name` varchar(255) DEFAULT NULL,")//
-                .append("`system_version` varchar(255) DEFAULT NULL,")//
-                .append("`app_version` varchar(255) DEFAULT NULL,")//
-                .append("`login_time` datetime DEFAULT NULL,")//
-                .append("`logout_time` datetime DEFAULT NULL,")//
-                .append("`online_time` int(11) DEFAULT NULL,")//
-                .append("`login_ip` varchar(32) DEFAULT NULL,")//
-                .append("`diamond` int(11) DEFAULT '0',")//
-                .append("`gold` int(11) DEFAULT '0',")//
-                .append("`vigor` int(11) DEFAULT '0',")//
-                .append("`player_level` int(11) DEFAULT '0',")//
-                .append("`account_name` varchar(255) DEFAULT NULL,")//
-                .append("`player_name` varchar(255) DEFAULT NULL,")//
-                .append("PRIMARY KEY (`id`),")//
-                .append("KEY `service_id` (`service_id`),")//
-                .append("KEY `channel_id` (`channel_id`),")//
-                .append("KEY `player_channel` (`player_channel`),")//
-                .append("KEY `account_id` (`account_id`),")//
-                .append("KEY `player_id` (`player_id`),")//
-                .append("KEY `device_mac` (`device_mac`),")//
-                .append("KEY `login_time` (`login_time`),")//
-                .append("KEY `logout_time` (`logout_time`),")//
-                .append("KEY `online_time` (`online_time`)")//
-                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
-        jdbcw.executeSQL(createSql.toString());
+        String createSql = "CREATE TABLE IF NOT EXISTS `"+today+"_tab_login_info`("
+                +"`id` bigint(20) NOT NULL AUTO_INCREMENT,"//
+               +"`service_id` int(11) DEFAULT NULL,"//
+               +"`channel_id` int(11) DEFAULT NULL,"//
+               +"`player_channel` int(11) DEFAULT NULL,"//
+               +"`account_id` int(11) DEFAULT NULL,"//
+               +"`player_id` int(11) DEFAULT NULL,"//
+               +"`device_mac` varchar(255) DEFAULT NULL,"//
+               +"`device_name` varchar(255) DEFAULT NULL,"//
+               +"`system_name` varchar(255) DEFAULT NULL,"//
+               +"`system_version` varchar(255) DEFAULT NULL,"//
+               +"`app_version` varchar(255) DEFAULT NULL,"//
+               +"`login_time` datetime DEFAULT NULL,"//
+               +"`logout_time` datetime DEFAULT NULL,"//
+               +"`online_time` int(11) DEFAULT NULL,"//
+               +"`login_ip` varchar(32) DEFAULT NULL,"//
+               +"`diamond` int(11) DEFAULT '0',"//
+               +"`gold` int(11) DEFAULT '0',"//
+               +"`vigor` int(11) DEFAULT '0',"//
+               +"`player_level` int(11) DEFAULT '0',"//
+               +"`account_name` varchar(255) DEFAULT NULL,"//
+               +"`player_name` varchar(255) DEFAULT NULL,"//
+               +"PRIMARY KEY (`id`),"//
+               +"KEY `service_id` (`service_id`),"//
+               +"KEY `channel_id` (`channel_id`),"//
+               +"KEY `player_channel` (`player_channel`),"//
+               +"KEY `account_id` (`account_id`),"//
+               +"KEY `player_id` (`player_id`),"//
+               +"KEY `device_mac` (`device_mac`),"//
+               +"KEY `login_time` (`login_time`),"//
+               +"KEY `logout_time` (`logout_time`),"//
+               +"KEY `online_time` (`online_time`)"//
+               +") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        jdbcw.executeSQL(createSql);
     }
 
     /**
     * 创建登陆汇总日志sql
     * 
-    * @param today
+    * @param today 当前时间格式为yyyy_MM_dd
     */
     private void createLoginSumInfo(String today) {
-        StringBuffer createSql = new StringBuffer();
-        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_login_sum_info`(")//
-                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
-                .append("`service_id` int(11) DEFAULT NULL,")//
-                .append("`channel_id` int(11) DEFAULT NULL,")//
-                .append("`player_channel` int(11) DEFAULT NULL,")//
-                .append("`player_id` int(11) DEFAULT NULL,")//
-                .append("PRIMARY KEY (`id`),")//
-                .append("KEY `service_id` (`service_id`),")//
-                .append("KEY `channel_id` (`channel_id`),")//
-                .append("KEY `player_channel` (`player_channel`),")//
-                .append("KEY `player_id` (`player_id`)")//
-                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
-        jdbcw.executeSQL(createSql.toString());
+        String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_login_sum_info`("//
+                +"`id` bigint(20) NOT NULL AUTO_INCREMENT,"//
+                +"`service_id` int(11) DEFAULT NULL,"//
+                +"`channel_id` int(11) DEFAULT NULL,"//
+                +"`player_channel` int(11) DEFAULT NULL,"//
+                +"`player_id` int(11) DEFAULT NULL,"//
+                +"PRIMARY KEY (`id`),"
+                +"KEY `service_id` (`service_id`),"
+                +"KEY `channel_id` (`channel_id`),"
+                +"KEY `player_channel` (`player_channel`),"
+                +"KEY `player_id` (`player_id`)"
+                +") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        jdbcw.executeSQL(createSql);
     }
 
     private void createAccountNewCount(String today) {
-        StringBuffer createSql = new StringBuffer();
-        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_account_new_count`(")//
-                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
-                .append("`service_id` int(11) DEFAULT NULL,")//
-                .append("`channel_id` int(11) DEFAULT NULL,")//
-                .append("`account_id` int(11) DEFAULT NULL,")//
-                .append("`create_time` datetime DEFAULT NULL,")//
-                .append("PRIMARY KEY (`id`),")//
-                .append("KEY `anc_service_id` (`service_id`),")//
-                .append("KEY `anc_channel_id` (`channel_id`)")//
-                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
-        jdbcw.executeSQL(createSql.toString());
+        String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_account_new_count`("
+                +"`id` bigint(20) NOT NULL AUTO_INCREMENT,"
+                +"`service_id` int(11) DEFAULT NULL,"
+                +"`channel_id` int(11) DEFAULT NULL,"
+                +"`account_id` int(11) DEFAULT NULL,"
+                +"`create_time` datetime DEFAULT NULL,"
+                +"PRIMARY KEY (`id`),"
+                +"KEY `anc_service_id` (`service_id`),"
+                +"KEY `anc_channel_id` (`channel_id`)"
+                +") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        jdbcw.executeSQL(createSql);
     }
 
     private void createPlayerNewCount(String today) {
-        StringBuffer createSql = new StringBuffer();
-        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_player_new_count`(")//
-                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
-                .append("`service_id` int(11) DEFAULT NULL,")//
-                .append("`channel_id` int(11) DEFAULT NULL,")//
-                .append("`player_id` int(11) DEFAULT NULL,")//
-                .append("`create_time` datetime DEFAULT NULL,")//
-                .append("PRIMARY KEY (`id`),")//
-                .append("KEY `pnc_service_id` (`service_id`),")//
-                .append("KEY `pnc_channel_id` (`channel_id`)")//
-                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
-        jdbcw.executeSQL(createSql.toString());
+       String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_player_new_count`("
+                +"`id` bigint(20) NOT NULL AUTO_INCREMENT,"
+                +"`service_id` int(11) DEFAULT NULL,"
+                +"`channel_id` int(11) DEFAULT NULL,"
+                +"`player_id` int(11) DEFAULT NULL,"
+                +"`create_time` datetime DEFAULT NULL,"
+                +"PRIMARY KEY (`id`),"
+                +"KEY `pnc_service_id` (`service_id`),"
+                +"KEY `pnc_channel_id` (`channel_id`)"
+                +") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        jdbcw.executeSQL(createSql);
     }
 
     private void createDeviceNewCount(String today) {
-        StringBuffer createSql = new StringBuffer();
-        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_device_new_count`(")//
-                .append("`id` bigint(20) NOT NULL AUTO_INCREMENT,")//
-                .append("`service_id` int(11) DEFAULT NULL,")//
-                .append("`channel_id` int(11) DEFAULT NULL,")//
-                .append("`device_mac` varchar(255) DEFAULT NULL,")//
-                .append("`create_time` datetime DEFAULT NULL,")//
-                .append("PRIMARY KEY (`id`),")//
-                .append("KEY `dnc_service_id` (`service_id`),")//
-                .append("KEY `dnc_channel_id` (`channel_id`)")//
-                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
-        jdbcw.executeSQL(createSql.toString());
+        String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_device_new_count`("
+                +"`id` bigint(20) NOT NULL AUTO_INCREMENT,"
+                +"`service_id` int(11) DEFAULT NULL,"
+                +"`channel_id` int(11) DEFAULT NULL,"
+                +"`device_mac` varchar(255) DEFAULT NULL,"
+                +"`create_time` datetime DEFAULT NULL,"
+                +"PRIMARY KEY (`id`),"
+                +"KEY `dnc_service_id` (`service_id`),"
+                +"KEY `dnc_channel_id` (`channel_id`)"
+                +") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        jdbcw.executeSQL(createSql);
     }
 
     private void createOnlineInfo(String today) {
-        StringBuffer createSql = new StringBuffer();
-        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_online_info`(")//
-                .append("`id` bigint(11) NOT NULL AUTO_INCREMENT,")//
-                .append("`service_id` int(11) DEFAULT NULL,")//
-                .append("`channel_id` int(11) DEFAULT NULL,")//
-                .append("`date_minute` int(11) DEFAULT NULL,")// 记录时间(分钟)
-                .append("`online_num` int(11) DEFAULT NULL,")//
-                .append("PRIMARY KEY (`id`),")//
-                .append("KEY `service_id` (`service_id`),")//
-                .append("KEY `date_minute` (`date_minute`)")//
-                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";");//
-        jdbcw.executeSQL(createSql.toString());
+        String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_online_info`("
+                +"`id` bigint(11) NOT NULL AUTO_INCREMENT,"
+                +"`service_id` int(11) DEFAULT NULL,"
+                +"`channel_id` int(11) DEFAULT NULL,"
+                +"`date_minute` int(11) DEFAULT NULL,"// 记录时间(分钟)
+                +"`online_num` int(11) DEFAULT NULL,"
+                +"PRIMARY KEY (`id`),"
+                +"KEY `service_id` (`service_id`),"
+                +"KEY `date_minute` (`date_minute`)"
+                +") ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        jdbcw.executeSQL(createSql);
     }
 
     private void createRechargeInfo(String today) {
-        StringBuffer createSql = new StringBuffer();
-        createSql.append("CREATE TABLE IF NOT EXISTS `").append(today).append("_tab_recharge_info`(")//
-                .append("`id` int(11) NOT NULL AUTO_INCREMENT,") //
-                .append("`service_id` int(11) DEFAULT NULL,") // 服务器id
-                .append("`pay_channel` int(11) DEFAULT NULL,") //
-                .append("`player_channel` int(11) DEFAULT NULL,") //
-                .append("`player_id` int(11) DEFAULT NULL,") // 玩家id
-                .append("`product_id` int(11) DEFAULT NULL,") //
-                .append("`recharge_time` datetime DEFAULT NULL,") // 充值时间
-                .append("`money` double(100,2) DEFAULT '0.00',") //
-                .append("`order_num` varchar(255) DEFAULT NULL,") //
-                .append("`count` int(11) DEFAULT '0',") // 充值得钻
-                .append("`count_all` int(11) DEFAULT '0',") // 充值后玩家钻石总额
-                .append("PRIMARY KEY (`id`),") //
-                .append("KEY `service_id` (`service_id`),") //
-                .append("KEY `channel_id` (`pay_channel`),") //
-                .append("KEY `account_id` (`player_channel`),") //
-                .append("KEY `player_id` (`player_id`),") //
-                .append("KEY `product_id` (`product_id`),") //
-                .append("KEY `recharge_time` (`recharge_time`),") //
-                .append("KEY `order_num` (`order_num`)") //
-                .append(") DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";"); //
-        jdbcw.executeSQL(createSql.toString());
+
+        String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_recharge_info`("
+                +"`id` int(11) NOT NULL AUTO_INCREMENT,"// //
+                +"`service_id` int(11) DEFAULT NULL,"// // 服务器id
+                +"`pay_channel` int(11) DEFAULT NULL,"// //
+                +"`player_channel` int(11) DEFAULT NULL,"// //
+                +"`player_id` int(11) DEFAULT NULL,"// // 玩家id
+                +"`product_id` int(11) DEFAULT NULL,"// //
+                +"`recharge_time` datetime DEFAULT NULL,"// // 充值时间
+                +"`money` double(100,2) DEFAULT '0.00',"// //
+                +"`order_num` varchar(255) DEFAULT NULL,"// //
+                +"`count` int(11) DEFAULT '0',"// // 充值得钻
+                +"`count_all` int(11) DEFAULT '0',"// // 充值后玩家钻石总额
+                +"PRIMARY KEY (`id`),"// //
+                +"KEY `service_id` (`service_id`),"// //
+                +"KEY `channel_id` (`pay_channel`),"// //
+                +"KEY `account_id` (`player_channel`),"// //
+                +"KEY `player_id` (`player_id`),"// //
+                +"KEY `product_id` (`product_id`),"// //
+                +"KEY `recharge_time` (`recharge_time`),"// //
+                +"KEY `order_num` (`order_num`)"// //
+                +") DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";"; //
+        jdbcw.executeSQL(createSql);
     }
 }

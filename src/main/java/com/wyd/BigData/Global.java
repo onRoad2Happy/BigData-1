@@ -47,4 +47,5 @@ public class Global {
 		this.ssc = ssc;
 	}
 
+
 }

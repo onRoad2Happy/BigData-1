@@ -1,13 +1,13 @@
 package com.wyd.BigData.RDD;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.Function;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -23,7 +23,6 @@ public class ItemLogRDD implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -5320691333307682669L;
-	static SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
 	private static final Pattern SPACE = Pattern.compile("\t");
 
 	@SuppressWarnings("serial")
@@ -31,16 +30,13 @@ public class ItemLogRDD implements Serializable {
 		if(rdd.count()==0) return;
 		ItemLogRDD ldd = new ItemLogRDD();
 		JavaRDD<SparkFlumeEvent> filterRdd = ldd.filter(rdd);
-		JavaRDD<Row> rowRDD = filterRdd.map(new Function<SparkFlumeEvent, Row>() {
-			@Override
-			public Row call(SparkFlumeEvent flume) throws Exception {
+		JavaRDD<Row> rowRDD = filterRdd.map(flume-> {
 				String line = new String(flume.event().getBody().array());
 				String[] parts = SPACE.split(line);
 				return RowFactory.create(Long.valueOf(parts[1]), Integer.valueOf(parts[2]), Integer.valueOf(parts[3]),
 						Integer.valueOf(parts[4]), Integer.valueOf(parts[5]), Integer.valueOf(parts[6]),
 						Integer.valueOf(parts[7]), Integer.valueOf(parts[8]), Integer.valueOf(parts[9]), parts[10],
 						parts[11], Integer.valueOf(parts[12]), Integer.valueOf(parts[13]), Integer.valueOf(parts[14]));
-			}
 		});
 		StructType schema = ldd.createStruct();
 		// 创建一个DataFrame
@@ -59,19 +55,16 @@ public class ItemLogRDD implements Serializable {
 	}
 
 	@SuppressWarnings("serial")
-	public JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
-		return rdd.filter(new Function<SparkFlumeEvent, Boolean>() {
-			@Override
-			public Boolean call(SparkFlumeEvent flume) throws Exception {
+	private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
+		return rdd.filter(flume->{
 				String line = new String(flume.event().getBody().array());
 				String[] parts = SPACE.split(line);
 				return (parts.length >= 2 && "19".equals(parts[0]));
-			}
 		});
 	}
 
 	private StructType createStruct() {
-		List<StructField> structFields = new ArrayList<StructField>();
+		List<StructField> structFields = new ArrayList<>();
 		structFields.add(DataTypes.createStructField("time", DataTypes.LongType, true));
 		structFields.add(DataTypes.createStructField("playerId", DataTypes.IntegerType, true));
 		structFields.add(DataTypes.createStructField("itemId", DataTypes.IntegerType, true));
