@@ -82,10 +82,10 @@ public class BaseDao implements Serializable {
         return instance;
     }
 
-    public AccountInfo getAccountInfo(int id) {
-        if (accountInfoMap.containsKey(id)) return accountInfoMap.get(id);
+    public AccountInfo getAccountInfo(int accountId) {
+        if (accountInfoMap.containsKey(accountId)) return accountInfoMap.get(accountId);
         AccountInfo accountInfo = new AccountInfo();
-        jdbcw.doQuery("select `id` ,`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type` from tab_account_info where id=?", new Object[] { id}, new ExecuteCallBack() {
+        jdbcw.doQuery("select `id` ,`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type` from tab_account_info where account_id=? ORDER BY id DESC LIMIT 1", new Object[] { accountId}, new ExecuteCallBack() {
             @Override
             public void call(ResultSet rs) {
                 try {
@@ -107,7 +107,7 @@ public class BaseDao implements Serializable {
             }
         });
         if (accountInfo.getId() != 0) {
-            accountInfoMap.put(id, accountInfo);
+            accountInfoMap.put(accountId, accountInfo);
             return accountInfo;
         }
         return null;
@@ -117,7 +117,7 @@ public class BaseDao implements Serializable {
         if (playerInfoMap.containsKey(playerId)) return playerInfoMap.get(playerId);
         PlayerInfo info = new PlayerInfo();
         jdbcw.doQuery(
-                "select `id`,`player_id`,`service_id`,`channel_id`,`account_id`,`device_mac`,`create_time`,`player_name`,`player_sex`,`player_level`,`upgrade_time`,`player_fighting`,`vip_level`,`sports_level`,`ranking_level`,`login_time`,`is_two`,`is_third`,`is_four`,`is_five`,`is_six`,`is_seven`,`is_fourteen`,`is_thirty`,`is_sixty`,`total_money`,`recharge_num`,`first_channel`,`first_money`,`first_level`,`first_recharge`,`first_cost_time`,`first_cost_level`,`first_cost_num`,`first_cost_item`,`wltv`,`mltv`,`diamond`,`gold`,`login_num`,`seven_num`,`total_online`,`guild_id`,`coures_id`,`coures_step`,`tiro_time`,`mate_id`,`top_singlemap`,`top_dare_singlemap`,`top_singlemap_time`,`top_elite_singlemap`,`top_dare_elite_singlemap`,`top_elite_singlemap_time`,`vigor`,`battle_win_marry`,`battle_win_guild`,`gag_time`,`gag_reason`,`is_eight`,`is_nine`,`is_ten`,`is_eleven`,`is_twelve`,`is_thirteen`,`login_days`,`friend_count`,`weapon_id`,`weapon_item_id`,`weapon_level`,`necklace_id`,`necklace_item_id`,`necklace_level`,`ring_id`,`ring_item_id`,`ring_level`,`bracelet_id`,`bracelet_item_id`,`bracelet_level`,`talisman_id`,`talisman_item_id`,`talisman_level`,`medal_id`,`medal_item_id`,`medal_level`,`prop_fury_level`,`prop_hidesingle_level`,`prop_hidegroup_level`,`prop_reflect_level`,`prop_treatsingle_level`,`prop_treatgroup_level`,`prop_guardian_level`,`prop_dice_level`,`pet_id`,`pet_item_id`,`pet_level`,`rank_match_num`,`contact_num`,`top_towermap`,`towermap_num`,`teammap_num` from tab_player_info where player_id=?",
+                "select `id`,`player_id`,`service_id`,`channel_id`,`account_id`,`device_mac`,`create_time`,`player_name`,`player_sex`,`player_level`,`upgrade_time`,`player_fighting`,`vip_level`,`sports_level`,`ranking_level`,`login_time`,`is_two`,`is_third`,`is_four`,`is_five`,`is_six`,`is_seven`,`is_fourteen`,`is_thirty`,`is_sixty`,`total_money`,`recharge_num`,`first_channel`,`first_money`,`first_level`,`first_recharge`,`first_cost_time`,`first_cost_level`,`first_cost_num`,`first_cost_item`,`wltv`,`mltv`,`diamond`,`gold`,`login_num`,`seven_num`,`total_online`,`guild_id`,`coures_id`,`coures_step`,`tiro_time`,`mate_id`,`top_singlemap`,`top_dare_singlemap`,`top_singlemap_time`,`top_elite_singlemap`,`top_dare_elite_singlemap`,`top_elite_singlemap_time`,`vigor`,`battle_win_marry`,`battle_win_guild`,`gag_time`,`gag_reason`,`is_eight`,`is_nine`,`is_ten`,`is_eleven`,`is_twelve`,`is_thirteen`,`login_days`,`friend_count`,`weapon_id`,`weapon_item_id`,`weapon_level`,`necklace_id`,`necklace_item_id`,`necklace_level`,`ring_id`,`ring_item_id`,`ring_level`,`bracelet_id`,`bracelet_item_id`,`bracelet_level`,`talisman_id`,`talisman_item_id`,`talisman_level`,`medal_id`,`medal_item_id`,`medal_level`,`prop_fury_level`,`prop_hidesingle_level`,`prop_hidegroup_level`,`prop_reflect_level`,`prop_treatsingle_level`,`prop_treatgroup_level`,`prop_guardian_level`,`prop_dice_level`,`pet_id`,`pet_item_id`,`pet_level`,`rank_match_num`,`contact_num`,`top_towermap`,`towermap_num`,`teammap_num` from tab_player_info where player_id=? ORDER BY id DESC LIMIT 1",
                 new Object[] { playerId}, new ExecuteCallBack() {
                     @Override
                     public void call(ResultSet rs) {
@@ -239,7 +239,7 @@ public class BaseDao implements Serializable {
     public DeviceInfo getDeviceInfo(String mac) {
         if (deviceInfoMap.containsKey(mac)) return deviceInfoMap.get(mac);
         DeviceInfo deviceInfo = new DeviceInfo();
-        jdbcw.doQuery("select `id` ,`service_id` ,`channel_id`,`device_mac`,`create_time`, `device_name`,`system_name`,`system_version`,`app_version`  from tab_device_info where device_mac=?", new Object[] { mac}, new ExecuteCallBack() {
+        jdbcw.doQuery("select `id` ,`service_id` ,`channel_id`,`device_mac`,`create_time`, `device_name`,`system_name`,`system_version`,`app_version`  from tab_device_info where device_mac=? ORDER BY id DESC LIMIT 1", new Object[] { mac}, new ExecuteCallBack() {
             @Override
             public void call(ResultSet rs) {
                 try {
@@ -341,7 +341,7 @@ public class BaseDao implements Serializable {
         createPlayerNewCount(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerNewCount info : accountList) {
-            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getCreateTime()});
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(),info.getPlayerId(), info.getCreateTime()});
         }
         String tableName = today + "_tab_player_new_count";
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,player_id,create_time) values (?,?,?,?)", paramsList);
@@ -362,7 +362,7 @@ public class BaseDao implements Serializable {
     public LoginInfo getLoginInfo(String today, int playerId) {
         if (loginInfoMap.containsKey(playerId)) return loginInfoMap.get(playerId);
         LoginInfo info = new LoginInfo();
-        String sql = "select `id`,`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name` from " + today + "_tab_login_info where player_id=?";
+        String sql = "select `id`,`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name` from " + today + "_tab_login_info where player_id=? ORDER BY id DESC LIMIT 1";
         jdbcw.doQuery(sql, new Object[] { playerId}, new ExecuteCallBack() {
             @Override
             public void call(ResultSet rs) {
@@ -405,10 +405,10 @@ public class BaseDao implements Serializable {
         createLoginInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (LoginInfo info : loginList) {
-            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getAccountId(), info.getPlayerId(), info.getDeviceMac(), info.getDeviceName(), info.getSystemName(), info.getSystemVersion(), info.getAppVersion(), info.getLoginTime(), info.getLogoutTime(), info.getOnlineTime(), info.getLoginIp(), info.getDiamond(), info.getGold(), info.getVigor(), info.getPlayerLevel(), info.getAccountName(), info.getPlayerName()});
+            paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(),info.getPlayerChannel(), info.getAccountId(), info.getPlayerId(), info.getDeviceMac(), info.getDeviceName(), info.getSystemName(), info.getSystemVersion(), info.getAppVersion(), info.getLoginTime(), info.getLogoutTime(), info.getOnlineTime(), info.getLoginIp(), info.getDiamond(), info.getGold(), info.getVigor(), info.getPlayerLevel(), info.getAccountName(), info.getPlayerName()});
         }
         String tableName = today + "_tab_login_info";
-        jdbcw.doBatch("insert into " + tableName + " (`service_id`,`channel_id`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
+        jdbcw.doBatch("insert into " + tableName + " (`service_id`,`channel_id`,`player_channel`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
     }
 
     public void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {

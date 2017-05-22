@@ -1,5 +1,6 @@
 package com.wyd.BigData;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.VoidFunction2;
@@ -39,7 +40,10 @@ public class App {
         JavaReceiverInputDStream<SparkFlumeEvent> lines = FlumeUtils.createPollingStream(ssc, host, port);
         lines.foreachRDD(new VoidFunction2<JavaRDD<SparkFlumeEvent>, Time>() {
             public void call(JavaRDD<SparkFlumeEvent> rdd, Time time) throws Exception {
-                if (rdd.count() == 0) return;
+                long count = rdd.count();
+                LogLog.warn("接收到数据:"+count);
+                if ( count == 0) return;
+                
                 SparkSession spark = SparkSession.builder().enableHiveSupport().config(rdd.context().getConf()).getOrCreate();
                 // 创建用户
                 new CreateRDD().call(rdd, spark);

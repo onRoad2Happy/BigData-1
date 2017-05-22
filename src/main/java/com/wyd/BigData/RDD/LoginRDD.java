@@ -41,7 +41,7 @@ public class LoginRDD implements Serializable {
     public  void call(JavaRDD<SparkFlumeEvent> rdd, SparkSession spark) {
         if (rdd.count() == 0) return;
         JavaRDD<SparkFlumeEvent> loingRDD = filter(rdd);
-        LogLog.debug("loingRDD=====" + loingRDD.count());
+        //LogLog.debug("loingRDD=====" + loingRDD.count());
         // 数据源去重
         JavaRDD<Row> loingRowRDD = loingRDD.map(new Function<SparkFlumeEvent, Row>() {
             @Override
@@ -51,7 +51,7 @@ public class LoginRDD implements Serializable {
                 return RowFactory.create(Integer.valueOf(parts[2]), Integer.valueOf(parts[3]), Integer.valueOf(parts[5]));
             }
         }).distinct();
-        LogLog.debug("count2=====" + loingRowRDD.count());
+       // LogLog.debug("count2=====" + loingRowRDD.count());
         final String today = sf.format(Calendar.getInstance().getTime());
         // 查询数据库
         BaseDao dao = BaseDao.getInstance();
@@ -80,7 +80,7 @@ public class LoginRDD implements Serializable {
                     return  !optional.isPresent() || !optional.get();
                 }
             });
-            LogLog.debug("count3=====" + filtered.count());
+           // LogLog.debug("count3=====" + filtered.count());
             
             
             JavaPairRDD<Integer, Row> rdd2filtered = filtered.mapToPair(new PairFunction<Tuple2<Integer, Tuple2<Row, Optional<Boolean>>>, Integer, Row>() {
