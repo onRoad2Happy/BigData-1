@@ -38,7 +38,7 @@ public class LogoutRDD implements Serializable {
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 while (t.hasNext()) {
-                    String line = new String(t.next().event().getBody().array());
+                    String line = new String(t.next().event().getBody().array(),"UTF-8");
                     String[] datas = SPACE.split(line);
                     Date dataTime = new Date(Long.parseLong(datas[1]));
                     int playerId = Integer.parseInt(datas[2]);
@@ -68,7 +68,7 @@ public class LogoutRDD implements Serializable {
     @SuppressWarnings("serial")
     private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
         return rdd.filter(flume->{
-                String line = new String(flume.event().getBody().array());
+                String line = new String(flume.event().getBody().array(),"UTF-8");
                 String[] parts = SPACE.split(line);
                 return (parts.length >= 2 && "3".equals(parts[0]));
         });

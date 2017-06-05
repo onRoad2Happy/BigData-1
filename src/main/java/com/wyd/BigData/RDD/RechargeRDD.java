@@ -27,7 +27,6 @@ public class RechargeRDD implements Serializable {
 
     @SuppressWarnings("serial")
     public void call(JavaRDD<SparkFlumeEvent> rdd) {
-        final String today = sf.format(Calendar.getInstance().getTime());
         JavaRDD<SparkFlumeEvent> rechargeRDD = filter(rdd);
         if (rechargeRDD.count() == 0) return;
         LogLog.debug("rechargeRDD count:" + rechargeRDD.count());
@@ -38,7 +37,7 @@ public class RechargeRDD implements Serializable {
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 while (t.hasNext()) {
-                    String line = new String(t.next().event().getBody().array());
+                    String line = new String(t.next().event().getBody().array(),"UTF-8");
                     String[] datas = SPACE.split(line);
                     int playerId = Integer.parseInt(datas[2]);
                     PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
@@ -83,7 +82,7 @@ public class RechargeRDD implements Serializable {
                     }
                     
                 }
-                dao.saveRechargeInfoBatch(today, rechargeInfoList);
+                dao.saveRechargeInfoBatch(rechargeInfoList);
                 dao.updatePlayerInfoBatch(playerInfoList);
             }
         });
@@ -92,7 +91,7 @@ public class RechargeRDD implements Serializable {
     @SuppressWarnings("serial")
     private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
         return rdd.filter(flume -> {
-                String line = new String(flume.event().getBody().array());
+                String line = new String(flume.event().getBody().array(),"UTF-8");
                 String[] parts = SPACE.split(line);
                 return (parts.length >= 2 && "4".equals(parts[0]));
         });

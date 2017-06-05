@@ -41,7 +41,7 @@ public class App {
             LogLog.warn("接收到数据:"+count);
             if ( count == 0) return;
 
-            SparkSession spark = SparkSession.builder().enableHiveSupport().config(rdd.context().getConf()).getOrCreate();
+            // SparkSession spark = SparkSession.builder().enableHiveSupport().config(rdd.context().getConf()).getOrCreate();
             // 创建用户
             new CreateRDD().call(rdd);
             // 登陆数据入库

@@ -31,7 +31,7 @@ public class ItemLogRDD implements Serializable {
 		ItemLogRDD ldd = new ItemLogRDD();
 		JavaRDD<SparkFlumeEvent> filterRdd = ldd.filter(rdd);
 		JavaRDD<Row> rowRDD = filterRdd.map(flume-> {
-				String line = new String(flume.event().getBody().array());
+				String line = new String(flume.event().getBody().array(),"UTF-8");
 				String[] parts = SPACE.split(line);
 				return RowFactory.create(Long.valueOf(parts[1]), Integer.valueOf(parts[2]), Integer.valueOf(parts[3]),
 						Integer.valueOf(parts[4]), Integer.valueOf(parts[5]), Integer.valueOf(parts[6]),
@@ -57,7 +57,7 @@ public class ItemLogRDD implements Serializable {
 	@SuppressWarnings("serial")
 	private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
 		return rdd.filter(flume->{
-				String line = new String(flume.event().getBody().array());
+				String line = new String(flume.event().getBody().array(),"UTF-8");
 				String[] parts = SPACE.split(line);
 				return (parts.length >= 2 && "19".equals(parts[0]));
 		});

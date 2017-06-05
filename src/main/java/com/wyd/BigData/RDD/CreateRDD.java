@@ -1,26 +1,15 @@
 package com.wyd.BigData.RDD;
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.regex.Pattern;
-import org.apache.log4j.helpers.LogLog;
-import org.apache.spark.api.java.JavaRDD;
-
-import org.apache.spark.api.java.function.VoidFunction;
-
-import org.apache.spark.streaming.flume.SparkFlumeEvent;
-import com.wyd.BigData.bean.AccountInfo;
-import com.wyd.BigData.bean.AccountNewCount;
-import com.wyd.BigData.bean.DeviceInfo;
-import com.wyd.BigData.bean.DeviceNewCount;
-import com.wyd.BigData.bean.PlayerInfo;
-import com.wyd.BigData.bean.PlayerNewCount;
+import com.wyd.BigData.bean.*;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.StringUtil;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.streaming.flume.SparkFlumeEvent;
+
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Pattern;
 public class CreateRDD implements Serializable {
     /**
      * 
@@ -31,10 +20,9 @@ public class CreateRDD implements Serializable {
 
     @SuppressWarnings("serial")
     public void call(JavaRDD<SparkFlumeEvent> rdd) {
-        final String today = sf.format(Calendar.getInstance().getTime());
         JavaRDD<SparkFlumeEvent> createRDD = filter(rdd);
         if (createRDD.count() == 0) return;
-        LogLog.debug("createRDD count:" + createRDD.count());
+        //LogLog.debug("createRDD count:" + createRDD.count());
         createRDD.foreachPartition(new VoidFunction<Iterator<SparkFlumeEvent>>() {
             BaseDao               dao             = BaseDao.getInstance();
             List<AccountNewCount> accountNewList  = new ArrayList<>();
@@ -47,7 +35,7 @@ public class CreateRDD implements Serializable {
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 while (t.hasNext()) {
-                    String line = new String(t.next().event().getBody().array());
+                    String line = new String(t.next().event().getBody().array(),"UTF-8");
                     String[] datas = SPACE.split(line);
                     Date dataTime = new Date(Long.parseLong(datas[1]));
                     int serviceId = Integer.parseInt(datas[2]);
@@ -69,6 +57,7 @@ public class CreateRDD implements Serializable {
                     playerInfo.setAccountId(accountId);
                     playerInfo.setCreateTime(dataTime);
                     playerInfo.setPlayerName(datas[13]);
+                    //LogLog.warn("playerName:"+playerInfo.getPlayerName());
                     playerInfo.setDeviceMac(mac);
                     playerInfo.setPlayerSex("0".equals(datas[14]) ? "男" : "女");
                     playerInfo.setLoginTime(playerInfo.getCreateTime());
@@ -115,11 +104,11 @@ public class CreateRDD implements Serializable {
                         deviceNewList.add(deviceNewCount);
                     }
                 }
-                dao.saveAccountNewCountBatch(today, accountNewList);
+                dao.saveAccountNewCountBatch(accountNewList);
                 dao.saveAccountInfoBatch(accountInfoList);
-                dao.saveDeviceNewCountBatch(today, deviceNewList);
+                dao.saveDeviceNewCountBatch(deviceNewList);
                 dao.saveDeviceInfoBatch(deviceInfoList);
-                dao.savePlayerNewCountBatch(today, playerNewList);
+                dao.savePlayerNewCountBatch(playerNewList);
                 dao.savePlayerInfoBatch(playerInfoList);
             }
         });
@@ -128,7 +117,7 @@ public class CreateRDD implements Serializable {
     @SuppressWarnings("serial")
     private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
         return rdd.filter(flume->{
-                String line = new String(flume.event().getBody().array());
+                String line = new String(flume.event().getBody().array(),"UTF-8");
                 String[] parts = SPACE.split(line);
                 return (parts.length >= 2 && "1".equals(parts[0]));
             });

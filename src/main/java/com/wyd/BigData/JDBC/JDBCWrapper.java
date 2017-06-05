@@ -3,24 +3,24 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+
 import org.apache.commons.configuration.PropertiesConfiguration;
 import com.wyd.BigData.Global;
 public class JDBCWrapper implements Serializable {
     /**
-     * 
+     *
      */
-    private static final long                      serialVersionUID = 6876426193742259377L;
-    private static JDBCWrapper                     instance         = null;
-    private static LinkedBlockingQueue<Connection> connPool         = new LinkedBlockingQueue<>();
-    private int                                    connCount        = 0;
-    private int                                    connMaxCount     = 5;
-    private int                                    connMinCount     = 2;
-    private String                                         url              = null;
+    private static final long                            serialVersionUID = 6876426193742259377L;
+    private static       JDBCWrapper                     instance         = null;
+    private static       LinkedBlockingQueue<Connection> connPool         = new LinkedBlockingQueue<>();
+    private              int                             connCount        = 0;
+    private              int                             connMaxCount     = 5;
+    private              int                             connMinCount     = 2;
+    private              String                          url              = null;
 
     static {
         try {
@@ -39,7 +39,7 @@ public class JDBCWrapper implements Serializable {
                 conn = DriverManager.getConnection(url);
                 connPool.put(conn);
                 connCount++;
-            } catch (SQLException  | InterruptedException e) {
+            } catch (SQLException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -56,11 +56,11 @@ public class JDBCWrapper implements Serializable {
         return instance;
     }
 
-    private Connection getConnction() throws Exception {
+    private Connection getConnection() throws Exception {
         // System.out.println("connPool:" + connPool.size());
         Connection conn = connPool.poll();
-        while (conn == null && connCount < connMaxCount) {            
-            conn = DriverManager.getConnection(url);                
+        while (conn == null && connCount < connMaxCount) {
+            conn = DriverManager.getConnection(url);
             connCount++;
         }
         if (conn == null) {
@@ -73,7 +73,7 @@ public class JDBCWrapper implements Serializable {
         Connection conn = null;
         PreparedStatement statement = null;
         try {
-            conn = getConnction();
+            conn = getConnection();
             statement = conn.prepareStatement(sql);
             statement.execute();
         } catch (Exception e) {
@@ -94,7 +94,6 @@ public class JDBCWrapper implements Serializable {
                 }
             }
         }
-
     }
 
     /**
@@ -104,7 +103,7 @@ public class JDBCWrapper implements Serializable {
         Connection conn = null;
         PreparedStatement statement = null;
         try {
-            conn = getConnction();
+            conn = getConnection();
             conn.setAutoCommit(false);
             statement = conn.prepareStatement(sql);
             int size = paramsList.size();
@@ -140,20 +139,19 @@ public class JDBCWrapper implements Serializable {
                 }
             }
         }
-
     }
 
     /**
      * 执行查询
-     * @param sql  sql
-     * @param params 参数
-     * @param callBack 返回
+     * @param sql  sql1
+     * @param params  params
+     * @param callBack  callBack
      */
     public void doQuery(String sql, Object[] params, ExecuteCallBack callBack) {
         Connection conn = null;
         PreparedStatement statement = null;
         try {
-            conn = getConnction();
+            conn = getConnection();
             statement = conn.prepareStatement(sql);
             if (params != null) {
                 for (int i = 0; i < params.length; i++) {
@@ -183,32 +181,28 @@ public class JDBCWrapper implements Serializable {
 
     public static void main(String[] args) {
         JDBCWrapper jdbcw = JDBCWrapper.getInstance();
-         List<String> names = new ArrayList<>();
-         List<Object[]> paramsList = new ArrayList<>();
-         paramsList.add(new Object[] { "spark"});
-         paramsList.add(new Object[] { "scala"});
-         jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
-         paramsList.clear();
-         paramsList.add(new Object[] { "java", "scala"});
-         jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
-         jdbcw.doQuery("select * from tab_user", new Object[] {}, new ExecuteCallBack() {
-         @Override
-         public void call(ResultSet rs) {
-         try {
-         while (rs.next()) {
-         names.add(rs.getString(2));
-         }
-         } catch (SQLException e) {
-         e.printStackTrace();
-         }
-         }
-         });
-         for (String n : names) {
-         System.out.println(n);
-         }
-         paramsList.add(new Object[] { "java", "scala"});
-         jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
-         jdbcw.executeSQL("delete from tab_user");
-       
+        List<String> names = new ArrayList<>();
+        List<Object[]> paramsList = new ArrayList<>();
+        paramsList.add(new Object[] { "spark" });
+        paramsList.add(new Object[] { "scala" });
+        jdbcw.doBatch("INSERT INTO tab_user(name) VALUES(?)", paramsList);
+        paramsList.clear();
+        paramsList.add(new Object[] { "java", "scala" });
+        jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
+        jdbcw.doQuery("select * from tab_user", new Object[] {}, rs -> {
+            try {
+                while (rs.next()) {
+                    names.add(rs.getString(2));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        for (String n : names) {
+            System.out.println(n);
+        }
+        paramsList.add(new Object[] { "java", "scala" });
+        jdbcw.doBatch("UPDATE tab_user set name=? where name=?", paramsList);
+        jdbcw.executeSQL("delete from tab_user");
     }
 }

@@ -24,7 +24,6 @@ public class OnlineRDD implements Serializable {
 
     @SuppressWarnings("serial")
     public void call(JavaRDD<SparkFlumeEvent> rdd) {
-        final String today = sf.format(Calendar.getInstance().getTime());
         JavaRDD<SparkFlumeEvent> onlineRDD = filter(rdd);
         if (onlineRDD.count() == 0) return;
         LogLog.debug("logoutRDD count:" + onlineRDD.count());
@@ -34,7 +33,7 @@ public class OnlineRDD implements Serializable {
             @Override
             public void call(Iterator<SparkFlumeEvent> t) throws Exception {
                 while (t.hasNext()) {
-                    String line = new String(t.next().event().getBody().array());
+                    String line = new String(t.next().event().getBody().array(),"UTF-8");
                     String[] datas = SPACE.split(line);
                     long dataTime = Long.parseLong(datas[1]);
                     OnlineInfo info = new OnlineInfo();
@@ -47,7 +46,7 @@ public class OnlineRDD implements Serializable {
                     int minute = (int) (dataTime / 60000);
                     info.setDateMinute(minute);
                 }
-                dao.saveOnlineInfoBatch(today, onlineList);
+                dao.saveOnlineInfoBatch(onlineList);
             }
             
         });
@@ -56,7 +55,7 @@ public class OnlineRDD implements Serializable {
     @SuppressWarnings("serial")
     private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
         return rdd.filter(flume->{
-                String line = new String(flume.event().getBody().array());
+                String line = new String(flume.event().getBody().array(),"UTF-8");
                 String[] parts = SPACE.split(line);
                 return (parts.length >= 2 && "3".equals(parts[0]));
         });
