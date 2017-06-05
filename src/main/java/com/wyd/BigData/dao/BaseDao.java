@@ -295,7 +295,7 @@ public class BaseDao implements Serializable {
         }
     }
 
-    public void saveAccountNewCountBatch(String today, List<AccountNewCount> accountList) {
+    private void saveAccountNewCountBatch(String today, List<AccountNewCount> accountList) {
         createAccountNewCount(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (AccountNewCount info : accountList) {
@@ -327,7 +327,7 @@ public class BaseDao implements Serializable {
             savePlayerNewCountBatch(today,accountMap.get(today));
         }
     }
-    public void savePlayerNewCountBatch(String today, List<PlayerNewCount> accountList) {
+    private void savePlayerNewCountBatch(String today, List<PlayerNewCount> accountList) {
         createPlayerNewCount(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerNewCount info : accountList) {
@@ -346,7 +346,7 @@ public class BaseDao implements Serializable {
             saveRechargeInfoBatch(today,rechargeMap.get(today));
         }
     }
-    public void saveRechargeInfoBatch(String today, List<RechargeInfo> accountList) {
+    private void saveRechargeInfoBatch(String today, List<RechargeInfo> accountList) {
         createRechargeInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (RechargeInfo info : accountList) {
@@ -409,7 +409,7 @@ public class BaseDao implements Serializable {
             saveLoginInfoBatch(today,accountMap.get(today));
         }
     }
-    public void saveLoginInfoBatch(String today, List<LoginInfo> loginList) {
+    private void saveLoginInfoBatch(String today, List<LoginInfo> loginList) {
         createLoginInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (LoginInfo info : loginList) {
@@ -428,7 +428,7 @@ public class BaseDao implements Serializable {
             saveDeviceNewCountBatch(today,accountMap.get(today));
         }
     }
-    public void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {
+    private void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {
         createDeviceNewCount(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (DeviceNewCount info : accountList) {
@@ -440,14 +440,14 @@ public class BaseDao implements Serializable {
     public void saveOnlineInfoBatch(List<OnlineInfo> accountList) {
         Map<String, List<OnlineInfo>> accountMap = new HashMap<>();
         for (OnlineInfo account : accountList) {
-            String today = sf.format(account.getDateMinute()*60000);
+            String today = sf.format(new Date(account.getDateMinute()*60000L));
             accountMap.computeIfAbsent(today, x -> new ArrayList<>()).add(account);
         }
         for(String today:accountMap.keySet()){
             saveOnlineInfoBatch(today,accountMap.get(today));
         }
     }
-    public void saveOnlineInfoBatch(String today, List<OnlineInfo> onlineInfoList) {
+    private void saveOnlineInfoBatch(String today, List<OnlineInfo> onlineInfoList) {
         createOnlineInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (OnlineInfo info : onlineInfoList) {
