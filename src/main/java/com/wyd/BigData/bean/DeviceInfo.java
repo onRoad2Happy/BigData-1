@@ -4,8 +4,8 @@ import java.util.Date;
 
 public class DeviceInfo 
     implements java.io.Serializable {
-        private static final long serialVersionUID = 1L;
-        private int               id;
+    private static final long serialVersionUID = 253741164215691002L;
+    private int id;
         private int               serviceId;
         private int               channelId;
         private String            deviceMac;

@@ -1,7 +1,7 @@
 package com.wyd.BigData.bean;
-public class LoginSumInfo {
-    private static final long serialVersionUID = 1L;
-    private int               id;
+public class LoginSumInfo  implements java.io.Serializable {
+    private static final long serialVersionUID = -1830443850353667946L;
+    private int id;
     private int               serviceId;
     private int               channelId;
     private int               playerId;

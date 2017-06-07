@@ -3,7 +3,7 @@ package com.wyd.BigData.bean;
 import java.util.Date;
 
 public class PlayerInfo implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2950486540693172760L;
     private int id;
     private int playerId;
     private int serviceId;

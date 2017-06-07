@@ -1,8 +1,8 @@
 package com.wyd.BigData.bean;
 
 public class OnlineInfo implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
-    private int               id;
+    private static final long serialVersionUID = 6025844078645095782L;
+    private int id;
     private int               serviceId;
     private int               channelId;
     private int               dateMinute;// 记录时间(分钟)

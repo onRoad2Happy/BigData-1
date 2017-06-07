@@ -3,7 +3,7 @@ package com.wyd.BigData.bean;
  * Created by root on 6/6/17.
  */
 public class PlayerLevelInfo implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1870896559032168059L;
     private long id;
     private int  serviceId;
     private int  channelId;

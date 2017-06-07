@@ -4,8 +4,8 @@ package com.wyd.BigData.bean;
 import java.util.Date;
 
 public class AccountInfo implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
-    private int               id;
+    private static final long serialVersionUID = 2716085826371636834L;
+    private int id;
     private int               accountId;
     private int               serviceId;
     private int               channelId;

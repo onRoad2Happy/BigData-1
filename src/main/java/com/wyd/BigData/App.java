@@ -3,18 +3,17 @@ import com.wyd.BigData.RDD.*;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.SparkConf;
-
-
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.streaming.Durations;
-
 import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.flume.FlumeUtils;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
+
+import java.util.regex.Pattern;
 public class App {
 
-
+    private static final Pattern SPACE = Pattern.compile("\t");
 
     /**
      * 描述：启动服务
@@ -36,20 +35,26 @@ public class App {
             long count = rdd.count();
             LogLog.warn("接收到数据:"+count);
             if ( count == 0) return;
-
-            // SparkSession spark = SparkSession.builder().enableHiveSupport().config(rdd.context().getConf()).getOrCreate();
+             JavaRDD<String[]> strsRDD= rdd.map(flume->{
+                String line = new String(flume.event().getBody().array(),"UTF-8");
+                return SPACE.split(line);
+            });
             // 创建用户
-            new CreateRDD().call(rdd);
+            new CreateRDD().call(strsRDD);
             // 登陆数据入库
-            new LoginRDD().call(rdd);
+            new LoginRDD().call(strsRDD);
             // 充值数据
-            new RechargeRDD().call(rdd);
+            new RechargeRDD().call(strsRDD);
             // 登出
-            new LogoutRDD().call(rdd);
+            new LogoutRDD().call(strsRDD);
             // 在线人数
-            new OnlineRDD().call(rdd);
-            // 升级
-            new UpgradeRDD().call(rdd);
+            new OnlineRDD().call(strsRDD);
+            // 角色升级
+            new UpgradeRDD().call(strsRDD);
+            // VIP升级
+            new VipUpgradeRDD().call(strsRDD);
+            // 创建公会
+            new CreateGuildRDD().call(strsRDD);
         });
         ssc.start();
         ssc.awaitTermination();

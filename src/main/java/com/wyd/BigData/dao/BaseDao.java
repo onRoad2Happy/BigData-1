@@ -134,6 +134,27 @@ public class BaseDao implements Serializable {
         return upgradeInfo;
     }
 
+    public GuildInfo getGuildInfo(int guildId) {
+        GuildInfo guildInfo = new GuildInfo();
+        jdbcw.doQuery("select `id`,`guild_id`,`service_id`,`guild_level`,`guild_num` from tab_guild_info where `guild_id`=?", new Object[] {guildId}, rs -> {
+            try {
+                while (rs.next()) {
+                    guildInfo.setId(rs.getInt(1));
+                    guildInfo.setGuildId(rs.getInt(2));
+                    guildInfo.setServiceId(rs.getInt(3));
+                    guildInfo.setGuildLevel(rs.getInt(4));
+                    guildInfo.setGuildNum(rs.getInt(5));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        if(guildInfo.getId()==0){
+            return null;
+        }
+        return guildInfo;
+    }
+
     public PlayerInfo getPlayerInfo(int playerId) {
         if (playerInfoMap.containsKey(playerId))
             return playerInfoMap.get(playerId);
@@ -546,13 +567,27 @@ public class BaseDao implements Serializable {
         }
     }
 
+    public void updateGuildInfoBatch(List<GuildInfo> guildInfoList){
+        List<Object[]> paramsList = new ArrayList<>();
+        for (GuildInfo info : guildInfoList) {
+            paramsList.add(new Object[] {info.getGuildLevel(),info.getGuildNum(),info.getId()});
+        }
+        jdbcw.doBatch("update tab_guild_info set guild_level=?,guild_num=? where id=?", paramsList);
+    }
+
+    public void saveGuildInfo(GuildInfo info){
+        List<Object[]> paramsList = new ArrayList<>();
+        paramsList.add(new Object[] { info.getGuildId(),info.getServiceId(),info.getGuildLevel(),info.getGuildNum()});
+        jdbcw.doBatch("insert into tab_guild_info (`guild_id`,`service_id`,`guild_level`,`guild_num`) values (?,?,?,?)", paramsList);
+    }
+
     public void updatePlayerInfoBatch(List<PlayerInfo> playerInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getPlayerLevel(), info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
+            paramsList.add(new Object[] {info.getGuildId(),info.getUpgradeTime(), info.getVipLevel(),info.getPlayerLevel(), info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=?,first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set guild_id=?,upgrade_time=?,vip_level=?,player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=?,first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
     }
     public void updateUpgradeInfoBatch(List<UpgradeInfo> upgradeInfoList) {
         List<Object[]> paramsList = new ArrayList<>();

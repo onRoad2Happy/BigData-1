@@ -1,39 +1,35 @@
 package com.wyd.BigData.RDD;
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.Optional;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
-import org.apache.spark.streaming.flume.SparkFlumeEvent;
 import com.wyd.BigData.bean.AccountInfo;
 import com.wyd.BigData.bean.LoginInfo;
 import com.wyd.BigData.bean.LoginSumInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.StringUtil;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.Optional;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import scala.Tuple2;
+
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.*;
 public class LoginRDD implements Serializable {
     /**
      *
      */
     private static final long             serialVersionUID = -758442520627154431L;
     private static       SimpleDateFormat sf               = new SimpleDateFormat("yyyy_MM_dd");
-    private static final Pattern          SPACE            = Pattern.compile("\t");
 
-    @SuppressWarnings("serial") public void call(JavaRDD<SparkFlumeEvent> rdd) {
+
+    @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
         if (rdd.count() == 0)
             return;
-        JavaRDD<SparkFlumeEvent> loginRDD = filter(rdd);
+        JavaRDD<String []> loginRDD = filter(rdd);
         // 数据源去重
-        JavaRDD<Row> loginRowRDD = loginRDD.map(flume -> {
-            String line = new String(flume.event().getBody().array(), "UTF-8");
-            String[] parts = SPACE.split(line);
+        JavaRDD<Row> loginRowRDD = loginRDD.map(parts -> {
             String day = sf.format(new Date(Long.parseLong(parts[1])));
             return RowFactory.create(Integer.valueOf(parts[2]), Integer.valueOf(parts[3]), Integer.valueOf(parts[5]), day);
         }).distinct();
@@ -43,7 +39,7 @@ public class LoginRDD implements Serializable {
             String day = f._1();
             Iterable<Row> rows = f._2();
             List<Row> list = new ArrayList<>();
-            rows.forEach(row -> list.add(row));
+            rows.forEach(list::add);
             dayRowMap.put(day, list);
         });
         JavaSparkContext jsc = new JavaSparkContext(rdd.context());
@@ -97,8 +93,7 @@ public class LoginRDD implements Serializable {
             List<PlayerInfo> playerInfoList = new ArrayList<>();
             List<LoginInfo> loginInfoList = new ArrayList<>();
             while (lines.hasNext()) {
-                String line = new String(lines.next().event().getBody().array(), "UTF-8");
-                String[] datas = SPACE.split(line);
+                String[] datas = lines.next();
                 int playerId = Integer.parseInt(datas[5]);
                 PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
                 if (playerInfo == null) {
@@ -147,11 +142,7 @@ public class LoginRDD implements Serializable {
         });
     }
 
-    @SuppressWarnings("serial") private JavaRDD<SparkFlumeEvent> filter(JavaRDD<SparkFlumeEvent> rdd) {
-        return rdd.filter(flume -> {
-            String line = new String(flume.event().getBody().array(), "UTF-8");
-            String[] parts = SPACE.split(line);
-            return (parts.length >= 2 && "2".equals(parts[0]));
-        });
+    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
+        return rdd.filter(parts -> (parts.length >= 2 && "2".equals(parts[0])));
     }
 }

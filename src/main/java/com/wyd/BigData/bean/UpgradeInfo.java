@@ -3,8 +3,8 @@ package com.wyd.BigData.bean;
  * Created by root on 6/7/17.
  */
 public class UpgradeInfo implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
-    private int               id;
+    private static final long serialVersionUID = -7702379351620099346L;
+    private int id;
     private int               serviceId;
     private int               playerLevel;
     private long              totalTime;

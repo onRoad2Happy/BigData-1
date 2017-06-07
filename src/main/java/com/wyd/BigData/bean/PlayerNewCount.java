@@ -3,8 +3,8 @@ package com.wyd.BigData.bean;
 import java.util.Date;
 
 public class PlayerNewCount implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
-    private int     id;
+    private static final long serialVersionUID = 298546864349680425L;
+    private int id;
     private int     playerId;
     private int     serviceId;
     private int     channelId;
