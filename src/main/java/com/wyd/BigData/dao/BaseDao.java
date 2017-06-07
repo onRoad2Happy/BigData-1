@@ -92,6 +92,48 @@ public class BaseDao implements Serializable {
         return null;
     }
 
+    public PlayerLevelInfo getPlayerLevel(int serviceId, int channelId, int level) {
+        PlayerLevelInfo playerLevelInfo = new PlayerLevelInfo();
+        jdbcw.doQuery("select `id`,`service_id`,`channel_id`,`level`,`player_count` from tab_player_level_info where `service_id`=? and `channel_id`=? and `level`=?", new Object[] { serviceId, channelId, level }, rs -> {
+            try {
+                while (rs.next()) {
+                    playerLevelInfo.setId(rs.getInt(1));
+                    playerLevelInfo.setServiceId(rs.getInt(2));
+                    playerLevelInfo.setChannelId(rs.getInt(3));
+                    playerLevelInfo.setLevel(rs.getInt(4));
+                    playerLevelInfo.setPlayerCount(rs.getInt(5));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        if(playerLevelInfo.getId()==0){
+            return null;
+        }
+        return playerLevelInfo;
+    }
+
+    public UpgradeInfo getUpgradeInfo(int serviceId, int playerLevel) {
+        UpgradeInfo upgradeInfo = new UpgradeInfo();
+        jdbcw.doQuery("select `id`,`service_id`,`player_level`,`total_time`,`total_count` from tab_upgrade_info where `service_id`=? and `player_level`=?", new Object[] {serviceId,playerLevel}, rs -> {
+            try {
+                while (rs.next()) {
+                    upgradeInfo.setId(rs.getInt(1));
+                    upgradeInfo.setServiceId(rs.getInt(2));
+                    upgradeInfo.setPlayerLevel(rs.getInt(3));
+                    upgradeInfo.setTotalTime(rs.getInt(4));
+                    upgradeInfo.setTotalCount(rs.getInt(5));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        if(upgradeInfo.getId()==0){
+            return null;
+        }
+        return upgradeInfo;
+    }
+
     public PlayerInfo getPlayerInfo(int playerId) {
         if (playerInfoMap.containsKey(playerId))
             return playerInfoMap.get(playerId);
@@ -290,8 +332,8 @@ public class BaseDao implements Serializable {
             String today = sf.format(account.getCreateTime());
             accountMap.computeIfAbsent(today, x -> new ArrayList<>()).add(account);
         }
-        for(String today:accountMap.keySet()){
-            saveAccountNewCountBatch(today,accountMap.get(today));
+        for (String today : accountMap.keySet()) {
+            saveAccountNewCountBatch(today, accountMap.get(today));
         }
     }
 
@@ -317,16 +359,18 @@ public class BaseDao implements Serializable {
                 "insert into tab_player_info (`player_id`,`service_id`,`channel_id`,`account_id`,`device_mac`,`create_time`,`player_name`,`player_sex`,`player_level`,`upgrade_time`,`player_fighting`,`vip_level`,`sports_level`,`ranking_level`,`login_time`,`is_two`,`is_third`,`is_four`,`is_five`,`is_six`,`is_seven`,`is_fourteen`,`is_thirty`,`is_sixty`,`total_money`,`recharge_num`,`first_channel`,`first_money`,`first_level`,`first_recharge`,`first_cost_time`,`first_cost_level`,`first_cost_num`,`first_cost_item`,`wltv`,`mltv`,`diamond`,`gold`,`login_num`,`seven_num`,`total_online`,`guild_id`,`coures_id`,`coures_step`,`tiro_time`,`mate_id`,`top_singlemap`,`top_dare_singlemap`,`top_singlemap_time`,`top_elite_singlemap`,`top_dare_elite_singlemap`,`top_elite_singlemap_time`,`vigor`,`battle_win_marry`,`battle_win_guild`,`gag_time`,`gag_reason`,`is_eight`,`is_nine`,`is_ten`,`is_eleven`,`is_twelve`,`is_thirteen`,`login_days`,`friend_count`,`weapon_id`,`weapon_item_id`,`weapon_level`,`necklace_id`,`necklace_item_id`,`necklace_level`,`ring_id`,`ring_item_id`,`ring_level`,`bracelet_id`,`bracelet_item_id`,`bracelet_level`,`talisman_id`,`talisman_item_id`,`talisman_level`,`medal_id`,`medal_item_id`,`medal_level`,`prop_fury_level`,`prop_hidesingle_level`,`prop_hidegroup_level`,`prop_reflect_level`,`prop_treatsingle_level`,`prop_treatgroup_level`,`prop_guardian_level`,`prop_dice_level`,`pet_id`,`pet_item_id`,`pet_level`,`rank_match_num`,`contact_num`,`top_towermap`,`towermap_num`,`teammap_num`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 paramsList);
     }
+
     public void savePlayerNewCountBatch(List<PlayerNewCount> accountList) {
         Map<String, List<PlayerNewCount>> accountMap = new HashMap<>();
         for (PlayerNewCount account : accountList) {
             String today = sf.format(account.getCreateTime());
             accountMap.computeIfAbsent(today, x -> new ArrayList<>()).add(account);
         }
-        for(String today:accountMap.keySet()){
-            savePlayerNewCountBatch(today,accountMap.get(today));
+        for (String today : accountMap.keySet()) {
+            savePlayerNewCountBatch(today, accountMap.get(today));
         }
     }
+
     private void savePlayerNewCountBatch(String today, List<PlayerNewCount> accountList) {
         createPlayerNewCount(today);
         List<Object[]> paramsList = new ArrayList<>();
@@ -336,16 +380,18 @@ public class BaseDao implements Serializable {
         String tableName = today + "_tab_player_new_count";
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,player_id,create_time) values (?,?,?,?)", paramsList);
     }
+
     public void saveRechargeInfoBatch(List<RechargeInfo> rechargeInfoList) {
         Map<String, List<RechargeInfo>> rechargeMap = new HashMap<>();
         for (RechargeInfo recharge : rechargeInfoList) {
             String today = sf.format(recharge.getRechargeTime());
             rechargeMap.computeIfAbsent(today, x -> new ArrayList<>()).add(recharge);
         }
-        for(String today:rechargeMap.keySet()){
-            saveRechargeInfoBatch(today,rechargeMap.get(today));
+        for (String today : rechargeMap.keySet()) {
+            saveRechargeInfoBatch(today, rechargeMap.get(today));
         }
     }
+
     private void saveRechargeInfoBatch(String today, List<RechargeInfo> accountList) {
         createRechargeInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
@@ -399,16 +445,18 @@ public class BaseDao implements Serializable {
         }
         return null;
     }
+
     public void saveLoginInfoBatch(List<LoginInfo> accountList) {
         Map<String, List<LoginInfo>> accountMap = new HashMap<>();
         for (LoginInfo account : accountList) {
             String today = sf.format(account.getLoginTime());
             accountMap.computeIfAbsent(today, x -> new ArrayList<>()).add(account);
         }
-        for(String today:accountMap.keySet()){
-            saveLoginInfoBatch(today,accountMap.get(today));
+        for (String today : accountMap.keySet()) {
+            saveLoginInfoBatch(today, accountMap.get(today));
         }
     }
+
     private void saveLoginInfoBatch(String today, List<LoginInfo> loginList) {
         createLoginInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
@@ -418,16 +466,18 @@ public class BaseDao implements Serializable {
         String tableName = today + "_tab_login_info";
         jdbcw.doBatch("insert into " + tableName + " (`service_id`,`channel_id`,`player_channel`,`account_id`,`player_id`,`device_mac`,`device_name`,`system_name`,`system_version`,`app_version`,`login_time`,`logout_time`,`online_time`,`login_ip`,`diamond`,`gold`,`vigor`,`player_level`,`account_name`,`player_name`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
     }
+
     public void saveDeviceNewCountBatch(List<DeviceNewCount> accountList) {
         Map<String, List<DeviceNewCount>> accountMap = new HashMap<>();
         for (DeviceNewCount account : accountList) {
             String today = sf.format(account.getCreateTime());
             accountMap.computeIfAbsent(today, x -> new ArrayList<>()).add(account);
         }
-        for(String today:accountMap.keySet()){
-            saveDeviceNewCountBatch(today,accountMap.get(today));
+        for (String today : accountMap.keySet()) {
+            saveDeviceNewCountBatch(today, accountMap.get(today));
         }
     }
+
     private void saveDeviceNewCountBatch(String today, List<DeviceNewCount> accountList) {
         createDeviceNewCount(today);
         List<Object[]> paramsList = new ArrayList<>();
@@ -437,16 +487,18 @@ public class BaseDao implements Serializable {
         String tableName = today + "_tab_device_new_count";
         jdbcw.doBatch("insert into " + tableName + " (service_id,channel_id,device_mac,create_time) values (?,?,?,?)", paramsList);
     }
+
     public void saveOnlineInfoBatch(List<OnlineInfo> accountList) {
         Map<String, List<OnlineInfo>> accountMap = new HashMap<>();
         for (OnlineInfo account : accountList) {
-            String today = sf.format(new Date(account.getDateMinute()*60000L));
+            String today = sf.format(new Date(account.getDateMinute() * 60000L));
             accountMap.computeIfAbsent(today, x -> new ArrayList<>()).add(account);
         }
-        for(String today:accountMap.keySet()){
-            saveOnlineInfoBatch(today,accountMap.get(today));
+        for (String today : accountMap.keySet()) {
+            saveOnlineInfoBatch(today, accountMap.get(today));
         }
     }
+
     private void saveOnlineInfoBatch(String today, List<OnlineInfo> onlineInfoList) {
         createOnlineInfo(today);
         List<Object[]> paramsList = new ArrayList<>();
@@ -464,6 +516,17 @@ public class BaseDao implements Serializable {
         }
         String tableName = "tab_account_info";
         jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
+    }
+
+    public void saveUpgradeInfo(UpgradeInfo info) {
+        List<Object[]> paramsList = new ArrayList<>();
+        paramsList.add(new Object[] { info.getServiceId(),info.getPlayerLevel(),info.getTotalTime(),info.getTotalCount()});
+        jdbcw.doBatch("insert into tab_upgrade_info (`service_id`,`player_level`,`total_time`,`total_count`) values (?,?,?,?)", paramsList);
+    }
+    public void savePlayerLevelInfo(PlayerLevelInfo info) {
+        List<Object[]> paramsList = new ArrayList<>();
+        paramsList.add(new Object[] { info.getServiceId(),info.getChannelId(),info.getLevel(),info.getPlayerCount()});
+        jdbcw.doBatch("insert into tab_player_level_info (`service_id`,`channel_id`,`level`,`player_count`) values (?,?,?,?)", paramsList);
     }
 
     /**
@@ -490,6 +553,21 @@ public class BaseDao implements Serializable {
             playerInfoMap.put(info.getPlayerId(), info);
         }
         jdbcw.doBatch("update tab_player_info set player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=?,first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
+    }
+    public void updateUpgradeInfoBatch(List<UpgradeInfo> upgradeInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (UpgradeInfo info : upgradeInfoList) {
+            paramsList.add(new Object[] {info.getTotalTime(), info.getTotalCount(),info.getId() });
+        }
+        jdbcw.doBatch("update tab_upgrade_info set total_time=?,total_count=? where id=?", paramsList);
+    }
+
+    public void updatePlayerLevelInfoBatch(List<PlayerLevelInfo> playerLevelInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerLevelInfo info : playerLevelInfoList) {
+            paramsList.add(new Object[] {info.getPlayerCount(),info.getId() });
+        }
+        jdbcw.doBatch("update tab_player_level_info set `player_count`=? where id=?", paramsList);
     }
 
     private void createLoginInfo(String today) {

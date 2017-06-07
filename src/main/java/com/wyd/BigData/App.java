@@ -1,4 +1,5 @@
 package com.wyd.BigData;
+import com.wyd.BigData.RDD.*;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.SparkConf;
@@ -11,11 +12,6 @@ import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.flume.FlumeUtils;
 import org.apache.spark.streaming.flume.SparkFlumeEvent;
-import com.wyd.BigData.RDD.CreateRDD;
-import com.wyd.BigData.RDD.LoginRDD;
-import com.wyd.BigData.RDD.LogoutRDD;
-import com.wyd.BigData.RDD.OnlineRDD;
-import com.wyd.BigData.RDD.RechargeRDD;
 public class App {
 
 
@@ -52,6 +48,8 @@ public class App {
             new LogoutRDD().call(rdd);
             // 在线人数
             new OnlineRDD().call(rdd);
+            // 升级
+            new UpgradeRDD().call(rdd);
         });
         ssc.start();
         ssc.awaitTermination();

@@ -50,14 +50,14 @@ public class SqlUtil {
                         if (!column.equals("id")) {
                             getBean += s + "info.get" + method + "()";
                         }
-                        String datatype = rs.getString(2).toLowerCase();
-                        if (method.indexOf("Is") != -1 && datatype.equals("tinyint")) {
+                        String dataType = rs.getString(2).toLowerCase();
+                        if (method.indexOf("Is") != -1 && dataType.equals("tinyint")) {
                             setBean += "info.set" + method + "(rs.getBoolean(" + c + "));\n";
-                        } else if (datatype.equals("int")) {
+                        } else if (dataType.equals("int") || dataType.equals("bigint") || dataType.equals("smallint")) {
                             setBean += "info.set" + method + "(rs.getInt(" + c + "));\n";
-                        } else if (datatype.equals("datetime")) {
+                        } else if (dataType.equals("datetime")) {
                             setBean += "info.set" + method + "(rs.getDate(" + c + "));\n";
-                        } else if (datatype.equals("double")) {
+                        } else if (dataType.equals("double")) {
                             setBean += "info.set" + method + "(rs.getDate(" + c + "));\n";
                         } else {
                             setBean += "info.set" + method + "(rs.getString(" + c + "));\n";
