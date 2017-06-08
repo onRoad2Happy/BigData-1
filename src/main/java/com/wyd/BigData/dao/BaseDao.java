@@ -107,7 +107,7 @@ public class BaseDao implements Serializable {
                 e.printStackTrace();
             }
         });
-        if(playerLevelInfo.getId()==0){
+        if (playerLevelInfo.getId() == 0) {
             return null;
         }
         return playerLevelInfo;
@@ -115,7 +115,7 @@ public class BaseDao implements Serializable {
 
     public UpgradeInfo getUpgradeInfo(int serviceId, int playerLevel) {
         UpgradeInfo upgradeInfo = new UpgradeInfo();
-        jdbcw.doQuery("select `id`,`service_id`,`player_level`,`total_time`,`total_count` from tab_upgrade_info where `service_id`=? and `player_level`=?", new Object[] {serviceId,playerLevel}, rs -> {
+        jdbcw.doQuery("select `id`,`service_id`,`player_level`,`total_time`,`total_count` from tab_upgrade_info where `service_id`=? and `player_level`=?", new Object[] { serviceId, playerLevel }, rs -> {
             try {
                 while (rs.next()) {
                     upgradeInfo.setId(rs.getInt(1));
@@ -128,7 +128,7 @@ public class BaseDao implements Serializable {
                 e.printStackTrace();
             }
         });
-        if(upgradeInfo.getId()==0){
+        if (upgradeInfo.getId() == 0) {
             return null;
         }
         return upgradeInfo;
@@ -136,7 +136,7 @@ public class BaseDao implements Serializable {
 
     public GuildInfo getGuildInfo(int guildId) {
         GuildInfo guildInfo = new GuildInfo();
-        jdbcw.doQuery("select `id`,`guild_id`,`service_id`,`guild_level`,`guild_num` from tab_guild_info where `guild_id`=?", new Object[] {guildId}, rs -> {
+        jdbcw.doQuery("select `id`,`guild_id`,`service_id`,`guild_level`,`guild_num` from tab_guild_info where `guild_id`=?", new Object[] { guildId }, rs -> {
             try {
                 while (rs.next()) {
                     guildInfo.setId(rs.getInt(1));
@@ -149,7 +149,7 @@ public class BaseDao implements Serializable {
                 e.printStackTrace();
             }
         });
-        if(guildInfo.getId()==0){
+        if (guildInfo.getId() == 0) {
             return null;
         }
         return guildInfo;
@@ -541,12 +541,13 @@ public class BaseDao implements Serializable {
 
     public void saveUpgradeInfo(UpgradeInfo info) {
         List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { info.getServiceId(),info.getPlayerLevel(),info.getTotalTime(),info.getTotalCount()});
+        paramsList.add(new Object[] { info.getServiceId(), info.getPlayerLevel(), info.getTotalTime(), info.getTotalCount() });
         jdbcw.doBatch("insert into tab_upgrade_info (`service_id`,`player_level`,`total_time`,`total_count`) values (?,?,?,?)", paramsList);
     }
+
     public void savePlayerLevelInfo(PlayerLevelInfo info) {
         List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { info.getServiceId(),info.getChannelId(),info.getLevel(),info.getPlayerCount()});
+        paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getLevel(), info.getPlayerCount() });
         jdbcw.doBatch("insert into tab_player_level_info (`service_id`,`channel_id`,`level`,`player_count`) values (?,?,?,?)", paramsList);
     }
 
@@ -567,41 +568,40 @@ public class BaseDao implements Serializable {
         }
     }
 
-    public void updateGuildInfoBatch(List<GuildInfo> guildInfoList){
+    public void updateGuildInfoBatch(List<GuildInfo> guildInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (GuildInfo info : guildInfoList) {
-            paramsList.add(new Object[] {info.getGuildLevel(),info.getGuildNum(),info.getId()});
+            paramsList.add(new Object[] { info.getGuildLevel(), info.getGuildNum(), info.getId() });
         }
         jdbcw.doBatch("update tab_guild_info set guild_level=?,guild_num=? where id=?", paramsList);
     }
 
-    public void saveGuildInfo(GuildInfo info){
+    public void saveGuildInfo(GuildInfo info) {
         List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { info.getGuildId(),info.getServiceId(),info.getGuildLevel(),info.getGuildNum()});
+        paramsList.add(new Object[] { info.getGuildId(), info.getServiceId(), info.getGuildLevel(), info.getGuildNum() });
         jdbcw.doBatch("insert into tab_guild_info (`guild_id`,`service_id`,`guild_level`,`guild_num`) values (?,?,?,?)", paramsList);
     }
 
     public void updatePlayerInfoBatch(List<PlayerInfo> playerInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] {info.getGuildId(),info.getUpgradeTime(), info.getVipLevel(),info.getPlayerLevel(), info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getGuildId(), info.getUpgradeTime(), info.getVipLevel(), info.getPlayerLevel(), info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
         jdbcw.doBatch("update tab_player_info set guild_id=?,upgrade_time=?,vip_level=?,player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=?,first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
     }
+
     public void updateUpgradeInfoBatch(List<UpgradeInfo> upgradeInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (UpgradeInfo info : upgradeInfoList) {
-            paramsList.add(new Object[] {info.getTotalTime(), info.getTotalCount(),info.getId() });
+            paramsList.add(new Object[] { info.getTotalTime(), info.getTotalCount(), info.getId() });
         }
         jdbcw.doBatch("update tab_upgrade_info set total_time=?,total_count=? where id=?", paramsList);
     }
 
-    public void updatePlayerLevelInfoBatch(List<PlayerLevelInfo> playerLevelInfoList) {
+    public void updatePlayerLevelInfo(PlayerLevelInfo info) {
         List<Object[]> paramsList = new ArrayList<>();
-        for (PlayerLevelInfo info : playerLevelInfoList) {
-            paramsList.add(new Object[] {info.getPlayerCount(),info.getId() });
-        }
+        paramsList.add(new Object[] { info.getPlayerCount(), info.getId() });
         jdbcw.doBatch("update tab_player_level_info set `player_count`=? where id=?", paramsList);
     }
 

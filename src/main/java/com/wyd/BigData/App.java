@@ -29,6 +29,7 @@ public class App {
         int durations = config.getInt("durations");
         // System.out.println("=========host:"+host);
         JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(durations));
+        ssc.checkpoint("/checkpointofspark");
         Global.getInstance().setSsc(ssc);
         JavaReceiverInputDStream<SparkFlumeEvent> lines = FlumeUtils.createPollingStream(ssc, host, port);
         lines.foreachRDD(rdd->{
@@ -43,18 +44,18 @@ public class App {
             new CreateRDD().call(strsRDD);
             // 登陆数据入库
             new LoginRDD().call(strsRDD);
-            // 充值数据
-            new RechargeRDD().call(strsRDD);
             // 登出
             new LogoutRDD().call(strsRDD);
+            // 充值数据
+            new RechargeRDD().call(strsRDD);
             // 在线人数
             new OnlineRDD().call(strsRDD);
             // 角色升级
             new UpgradeRDD().call(strsRDD);
             // VIP升级
-            new VipUpgradeRDD().call(strsRDD);
+            //new VipUpgradeRDD().call(strsRDD);
             // 创建公会
-            new CreateGuildRDD().call(strsRDD);
+           // new CreateGuildRDD().call(strsRDD);
         });
         ssc.start();
         ssc.awaitTermination();
