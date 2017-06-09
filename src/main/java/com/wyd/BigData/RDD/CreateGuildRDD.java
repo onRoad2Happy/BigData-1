@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 public class CreateGuildRDD implements Serializable {
-    private static final long    serialVersionUID = -6343114767248386683L;
+    private static final long serialVersionUID = -1329380821588558546L;
 
     @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
         JavaRDD<String[]> rechargeRDD = filter(rdd);
@@ -25,15 +25,15 @@ public class CreateGuildRDD implements Serializable {
                 if (null != playerInfo) {
                     playerInfo.setGuildId(guildId);
                     playerInfoList.add(playerInfo);
-                }
-                GuildInfo guildInfo = dao.getGuildInfo(guildId);
-                if (guildInfo == null) {
-                    guildInfo = new GuildInfo();
-                    guildInfo.setGuildId(guildId);
-                    guildInfo.setServiceId(playerInfo.getServiceId());
-                    guildInfo.setGuildLevel(1);
-                    guildInfo.setGuildNum(1);
-                    dao.saveGuildInfo(guildInfo);
+                    GuildInfo guildInfo = dao.getGuildInfo(guildId);
+                    if (guildInfo == null) {
+                        guildInfo = new GuildInfo();
+                        guildInfo.setGuildId(guildId);
+                        guildInfo.setServiceId(playerInfo.getServiceId());
+                        guildInfo.setGuildLevel(1);
+                        guildInfo.setGuildNum(1);
+                        dao.saveGuildInfo(guildInfo);
+                    }
                 }
             }
             dao.updatePlayerGuildInfoBatch(playerInfoList);

@@ -10,7 +10,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class LogoutRDD implements Serializable {
     /**
@@ -18,7 +17,6 @@ public class LogoutRDD implements Serializable {
      */
     private static final long    serialVersionUID = -758442520627154431L;
     private static SimpleDateFormat      sf               = new SimpleDateFormat("yyyy_MM_dd");
-    private static final Pattern SPACE            = Pattern.compile("\t");
 
     @SuppressWarnings("serial")
     public void call(JavaRDD<String[]> rdd) {

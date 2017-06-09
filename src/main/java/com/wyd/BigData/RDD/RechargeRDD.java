@@ -1,28 +1,20 @@
 package com.wyd.BigData.RDD;
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import org.apache.log4j.helpers.LogLog;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.VoidFunction;
-import org.apache.spark.streaming.flume.SparkFlumeEvent;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.bean.RechargeInfo;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.DateUtil;
+import org.apache.log4j.helpers.LogLog;
+import org.apache.spark.api.java.JavaRDD;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 public class RechargeRDD implements Serializable {
     /**
      *
      */
     private static final long             serialVersionUID = -758442520627154431L;
-    private static       SimpleDateFormat sf               = new SimpleDateFormat("yyyy_MM_dd");
-    private static final Pattern          SPACE            = Pattern.compile("\t");
 
     @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
         JavaRDD<String[]> rechargeRDD = filter(rdd);
