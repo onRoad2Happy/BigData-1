@@ -34,7 +34,7 @@ public class VipUpgradeRDD implements Serializable {
                     playerInfoList.add(playerInfo);
                 }
             }
-            dao.updatePlayerInfoBatch(playerInfoList);
+            dao.updateVipLevelBatch(playerInfoList);
         });
     }
 

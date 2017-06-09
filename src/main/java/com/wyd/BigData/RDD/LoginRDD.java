@@ -137,7 +137,7 @@ public class LoginRDD implements Serializable {
                 playerInfoList.add(playerInfo);
                 loginInfoList.add(login);
             }
-            dao.updatePlayerInfoBatch(playerInfoList);
+            dao.updatePlayerLoginInfoBatch(playerInfoList);
             dao.saveLoginInfoBatch(loginInfoList);
         });
     }

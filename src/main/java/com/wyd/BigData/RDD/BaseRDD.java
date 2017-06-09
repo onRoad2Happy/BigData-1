@@ -69,7 +69,7 @@ public class BaseRDD implements Serializable {
         BaseDao dao = BaseDao.getInstance();
         int playerId = Integer.parseInt(datas[2]);
         int vipLevel = Integer.parseInt(datas[3]);
-        PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+        PlayerInfo playerInfo = dao.getPlayerInfo(playerId,false);
         if (null != playerInfo) {
             playerInfo.setVipLevel(vipLevel);
             playerInfoList.add(playerInfo);

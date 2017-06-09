@@ -36,7 +36,7 @@ public class CreateGuildRDD implements Serializable {
                     dao.saveGuildInfo(guildInfo);
                 }
             }
-            dao.updatePlayerInfoBatch(playerInfoList);
+            dao.updatePlayerGuildInfoBatch(playerInfoList);
         });
     }
 

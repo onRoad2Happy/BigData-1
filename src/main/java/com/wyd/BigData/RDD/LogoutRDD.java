@@ -1,20 +1,16 @@
 package com.wyd.BigData.RDD;
+import com.wyd.BigData.bean.LoginInfo;
+import com.wyd.BigData.bean.PlayerInfo;
+import com.wyd.BigData.dao.BaseDao;
+import org.apache.log4j.helpers.LogLog;
+import org.apache.spark.api.java.JavaRDD;
+
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.apache.log4j.helpers.LogLog;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.VoidFunction;
-
-import org.apache.spark.streaming.flume.SparkFlumeEvent;
-import com.wyd.BigData.bean.LoginInfo;
-import com.wyd.BigData.bean.PlayerInfo;
-
-import com.wyd.BigData.dao.BaseDao;
 
 public class LogoutRDD implements Serializable {
     /**
@@ -58,7 +54,7 @@ public class LogoutRDD implements Serializable {
                         }
                     }
                 }
-                dao.updatePlayerInfoBatch(playerInfoList);
+                dao.updateTotalOnlineBatch(playerInfoList);
                 dao.updateLoginInfoBatch(loginInfoList);
         });
     }

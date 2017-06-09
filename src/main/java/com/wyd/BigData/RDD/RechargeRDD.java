@@ -36,7 +36,7 @@ public class RechargeRDD implements Serializable {
             while (t.hasNext()) {
                 String[] datas = t.next();
                 int playerId = Integer.parseInt(datas[2]);
-                PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+                PlayerInfo playerInfo = dao.getPlayerInfo(playerId,false);
                 if (null == playerInfo) {
                     playerId = Integer.parseInt(datas[7].split("-")[0]);
                     playerInfo = dao.getPlayerInfo(playerId);
@@ -78,7 +78,7 @@ public class RechargeRDD implements Serializable {
                 }
             }
             dao.saveRechargeInfoBatch(rechargeInfoList);
-            dao.updatePlayerInfoBatch(playerInfoList);
+            dao.updateRechargeBatch(playerInfoList);
         });
     }
 
