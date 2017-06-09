@@ -4,6 +4,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.catalyst.plans.logical.Join;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
@@ -53,9 +54,17 @@ public class App {
             // 角色升级
             new UpgradeRDD().call(strsRDD);
             // VIP升级
-            //new VipUpgradeRDD().call(strsRDD);
+            new VipUpgradeRDD().call(strsRDD);
             // 创建公会
-           // new CreateGuildRDD().call(strsRDD);
+            new CreateGuildRDD().call(strsRDD);
+            // 公会升级
+            new GuildUpgradeRDD().call(strsRDD);
+            // 加入公会
+            new JoinGuildRDD().call(strsRDD);
+            // 退出公会
+            new QuitGuildRDD().call(strsRDD);
+            // 结婚
+            new MarryRDD().call(strsRDD);
         });
         ssc.start();
         ssc.awaitTermination();

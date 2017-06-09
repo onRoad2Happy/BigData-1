@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 public class QuitGuildRDD implements Serializable {
-    private static final long serialVersionUID = 1074561805691909533L;
+    private static final long serialVersionUID = 5309677673498328780L;
 
     public void call(JavaRDD<String[]> rdd) {
         JavaRDD<String[]> quitRDD = filter(rdd);

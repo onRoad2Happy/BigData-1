@@ -4,10 +4,11 @@ package com.wyd.BigData.bean;
  */
 public class UpgradeInfo implements java.io.Serializable {
     private static final long serialVersionUID = -7702379351620099346L;
-    private int id;
-    private int               serviceId;
-    private int               playerLevel;
-    private long              totalTime;
+    private int  id;
+    private int  serviceId;
+    private int  playerLevel;
+    private long totalTime;
+    private int  totalCount;
 
     public int getId() {
         return id;
@@ -48,6 +49,4 @@ public class UpgradeInfo implements java.io.Serializable {
     public void setTotalCount(int totalCount) {
         this.totalCount = totalCount;
     }
-
-    private int totalCount;
 }

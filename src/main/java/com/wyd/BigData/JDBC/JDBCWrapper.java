@@ -103,10 +103,11 @@ public class JDBCWrapper implements Serializable {
         Connection conn = null;
         PreparedStatement statement = null;
         try {
+            int size = paramsList.size();
+            if(size==0)return;
             conn = getConnection();
             conn.setAutoCommit(false);
             statement = conn.prepareStatement(sql);
-            int size = paramsList.size();
             int num = 0;
             for (int i = 0; i < size; i += 1000) {
                 statement.clearBatch();

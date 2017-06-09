@@ -156,7 +156,11 @@ public class BaseDao implements Serializable {
     }
 
     public PlayerInfo getPlayerInfo(int playerId) {
-        if (playerInfoMap.containsKey(playerId))
+        return getPlayerInfo(playerId, true);
+    }
+
+    public PlayerInfo getPlayerInfo(int playerId, boolean useCache) {
+        if (playerInfoMap.containsKey(playerId) && useCache)
             return playerInfoMap.get(playerId);
         PlayerInfo info = new PlayerInfo();
         jdbcw.doQuery(
@@ -582,16 +586,77 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("insert into tab_guild_info (`guild_id`,`service_id`,`guild_level`,`guild_num`) values (?,?,?,?)", paramsList);
     }
 
-    public void updatePlayerInfoBatch(List<PlayerInfo> playerInfoList) {
+    public void updateVipLevelBatch(List<PlayerInfo> playerInfoList) {
+        if(playerInfoList.size()==0)return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getGuildId(), info.getUpgradeTime(), info.getVipLevel(), info.getPlayerLevel(), info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getVipLevel(), info.getPlayerId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set guild_id=?,upgrade_time=?,vip_level=?,player_level=?,login_time=?,login_num=?,diamond=?,gold=?,vigor=?,first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set vip_level=? where player_id=?", paramsList);
+    }
+
+    public void updatePlayerUpgradeBatch(List<PlayerInfo> playerInfoList) {
+        if(playerInfoList.size()==0)return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getPlayerLevel(), info.getUpgradeTime(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set player_level=?,upgrade_time=? where player_id=?", paramsList);
+    }
+
+    public void updatePlayerLoginInfoBatch(List<PlayerInfo> playerInfoList) {
+        if(playerInfoList.size()==0)return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set login_time=?,login_num=?,diamond=?,gold=?,vigor=? where player_id=?", paramsList);
+    }
+
+    public void updateTotalOnlineBatch(List<PlayerInfo> playerInfoList) {
+        if(playerInfoList.size()==0)return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getTotalOnline(), info.getVigor(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set total_online=?,vigor=? where player_id=?", paramsList);
+    }
+
+    public void updatePlayerGuildInfoBatch(List<PlayerInfo> playerInfoList) {
+        if(playerInfoList.size()==0)return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getGuildId(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set guild_id=? where player_id=?", paramsList);
+    }
+    public void updatePlayerMarryInfoBatch(List<PlayerInfo> playerInfoList) {
+        if(playerInfoList.size()==0)return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getMateId(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set mate_id=? where player_id=?", paramsList);
+    }
+
+    public void updateRechargeBatch(List<PlayerInfo> playerInfoList) {
+        if(playerInfoList.size()==0)return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
     }
 
     public void updateUpgradeInfoBatch(List<UpgradeInfo> upgradeInfoList) {
+        if(upgradeInfoList.size()==0)return;
         List<Object[]> paramsList = new ArrayList<>();
         for (UpgradeInfo info : upgradeInfoList) {
             paramsList.add(new Object[] { info.getTotalTime(), info.getTotalCount(), info.getId() });
