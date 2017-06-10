@@ -4,6 +4,7 @@ import com.wyd.BigData.bean.PlayerLevelInfo;
 import com.wyd.BigData.bean.ServiceInfo;
 import com.wyd.BigData.bean.UpgradeInfo;
 import com.wyd.BigData.dao.BaseDao;
+import com.wyd.BigData.util.DataType;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
@@ -14,8 +15,11 @@ import java.util.List;
 public class UpgradeRDD implements Serializable {
     private static final long             serialVersionUID = 35472250916594214L;
 
-    @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
-        JavaRDD<String[]> upgradeRDD = filter(rdd);
+    private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_PLAYERUPGRADE);
+
+    public void call(JavaRDD<String[]> rdd) {
+        JavaRDD<String[]> upgradeRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
+
         if (upgradeRDD.count() == 0)
             return;
         //KEY: 玩家ID VAL: [升级时间,玩家升级前等级]
@@ -129,7 +133,4 @@ public class UpgradeRDD implements Serializable {
         dao.updateUpgradeInfoBatch(upgradeInfoList);
     }
 
-    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
-        return rdd.filter(parts -> (parts.length >= 2 && "6".equals(parts[0])));
-    }
 }
