@@ -2,6 +2,7 @@ package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.GuildInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
+import com.wyd.BigData.util.DataType;
 import org.apache.spark.api.java.JavaRDD;
 
 import java.io.Serializable;
@@ -9,12 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 public class CreateGuildRDD implements Serializable {
     private static final long serialVersionUID = -1329380821588558546L;
+    private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_CREATEGUILD);
 
-    @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
-        JavaRDD<String[]> rechargeRDD = filter(rdd);
-        if (rechargeRDD.count() == 0)
+    public void call(JavaRDD<String[]> rdd) {
+        JavaRDD<String[]> guildRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
+        if (guildRDD.count() == 0)
             return;
-        rechargeRDD.foreachPartition(t -> {
+        guildRDD.foreachPartition(t -> {
             BaseDao dao = BaseDao.getInstance();
             List<PlayerInfo> playerInfoList = new ArrayList<>();
             while (t.hasNext()) {
@@ -40,7 +42,4 @@ public class CreateGuildRDD implements Serializable {
         });
     }
 
-    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
-        return rdd.filter(parts -> (parts.length >= 2 && "8".equals(parts[0])));
-    }
 }

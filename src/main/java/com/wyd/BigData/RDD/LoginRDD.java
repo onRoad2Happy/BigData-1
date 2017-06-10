@@ -4,6 +4,7 @@ import com.wyd.BigData.bean.LoginInfo;
 import com.wyd.BigData.bean.LoginSumInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
+import com.wyd.BigData.util.DataType;
 import com.wyd.BigData.util.StringUtil;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -22,12 +23,11 @@ public class LoginRDD implements Serializable {
      */
     private static final long             serialVersionUID = -758442520627154431L;
     private static       SimpleDateFormat sf               = new SimpleDateFormat("yyyy_MM_dd");
+    private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_LOGIN);
 
+    public void call(JavaRDD<String[]> rdd) {
+        JavaRDD<String[]> loginRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
 
-    @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
-        if (rdd.count() == 0)
-            return;
-        JavaRDD<String []> loginRDD = filter(rdd);
         // 数据源去重
         JavaRDD<Row> loginRowRDD = loginRDD.map(parts -> {
             String day = sf.format(new Date(Long.parseLong(parts[1])));
@@ -142,7 +142,4 @@ public class LoginRDD implements Serializable {
         });
     }
 
-    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
-        return rdd.filter(parts -> (parts.length >= 2 && "2".equals(parts[0])));
-    }
 }

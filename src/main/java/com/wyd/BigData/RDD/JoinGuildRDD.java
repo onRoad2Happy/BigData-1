@@ -2,6 +2,7 @@ package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.GuildInfo;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
+import com.wyd.BigData.util.DataType;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
@@ -12,8 +13,11 @@ import java.util.List;
 public class JoinGuildRDD implements Serializable {
     private static final long serialVersionUID = 1074561805691909533L;
 
+    private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_JOINGUILD);
+
     public void call(JavaRDD<String[]> rdd) {
-        JavaRDD<String[]> joinRDD = filter(rdd);
+        JavaRDD<String[]> joinRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
+
         if (joinRDD.count() == 0)
             return;
         //更 新玩家信息
@@ -51,7 +55,4 @@ public class JoinGuildRDD implements Serializable {
         });
     }
 
-    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
-        return rdd.filter(parts -> (parts.length >= 2 && "10".equals(parts[0])));
-    }
 }

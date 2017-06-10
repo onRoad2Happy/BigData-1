@@ -1,6 +1,7 @@
 package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.bean.PlayerLevelInfo;
+import com.wyd.BigData.bean.ServiceInfo;
 import com.wyd.BigData.bean.UpgradeInfo;
 import com.wyd.BigData.dao.BaseDao;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -45,10 +46,10 @@ public class UpgradeRDD implements Serializable {
             int playerLevel = Integer.parseInt(parts[3]);
             int channelId = -1;
             int serviceId = -1;
-            PlayerInfo playerInfo = dao2.getPlayerInfo(playerId);
-            if (playerInfo != null) {
-                channelId = playerInfo.getChannelId();
-                serviceId = playerInfo.getServiceId();
+            ServiceInfo serviceInfo = dao2.getServiceInfo(playerId);
+            if (serviceInfo != null) {
+                channelId = serviceInfo.getChannelId();
+                serviceId = serviceInfo.getServiceId();
             }
             String key = serviceId + "_" + channelId + "_" + playerLevel;
             return new Tuple2<>(key, 1);
@@ -95,9 +96,9 @@ public class UpgradeRDD implements Serializable {
             int level = Integer.parseInt(parts[3]);
             int pileTime = (int) (Long.parseLong(parts[4]) / 1000);
             int serviceId = -1;
-            PlayerInfo playerInfo = dao2.getPlayerInfo(playerId);
-            if (playerInfo != null) {
-                serviceId = playerInfo.getServiceId();
+            ServiceInfo serviceInfo = dao2.getServiceInfo(playerId);
+            if (serviceInfo != null) {
+                serviceId = serviceInfo.getServiceId();
             }
             String key = serviceId + "_" + level;
             return new Tuple2<>(key, new Integer[] { pileTime, 1 });

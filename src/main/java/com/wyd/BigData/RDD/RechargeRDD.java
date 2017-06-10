@@ -2,6 +2,7 @@ package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.bean.RechargeInfo;
 import com.wyd.BigData.dao.BaseDao;
+import com.wyd.BigData.util.DataType;
 import com.wyd.BigData.util.DateUtil;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.api.java.JavaRDD;
@@ -15,9 +16,11 @@ public class RechargeRDD implements Serializable {
      *
      */
     private static final long             serialVersionUID = -758442520627154431L;
+    private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_RECHARGE);
 
-    @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
-        JavaRDD<String[]> rechargeRDD = filter(rdd);
+    public void call(JavaRDD<String[]> rdd) {
+        JavaRDD<String[]> rechargeRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
+
         if (rechargeRDD.count() == 0)
             return;
         LogLog.debug("rechargeRDD count:" + rechargeRDD.count());
@@ -74,7 +77,4 @@ public class RechargeRDD implements Serializable {
         });
     }
 
-    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
-        return rdd.filter(parts -> (parts.length >= 2 && "4".equals(parts[0])));
-    }
 }

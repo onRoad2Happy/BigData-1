@@ -1,6 +1,7 @@
 package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.OnlineInfo;
 import com.wyd.BigData.dao.BaseDao;
+import com.wyd.BigData.util.DataType;
 import org.apache.spark.api.java.JavaRDD;
 
 import java.io.Serializable;
@@ -12,8 +13,11 @@ public class OnlineRDD implements Serializable {
      */
     private static final long             serialVersionUID = -758442520627154431L;
 
-    @SuppressWarnings("serial") public void call(JavaRDD<String[]> rdd) {
-        JavaRDD<String[]> onlineRDD = filter(rdd);
+    private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_ONLINENUM);
+
+    public void call(JavaRDD<String[]> rdd) {
+        JavaRDD<String[]> onlineRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
+
         if (onlineRDD.count() == 0)
             return;
         onlineRDD.foreachPartition(t -> {
@@ -36,7 +40,4 @@ public class OnlineRDD implements Serializable {
         });
     }
 
-    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
-        return rdd.filter(parts -> (parts.length >= 2 && "5".equals(parts[0])));
-    }
 }
