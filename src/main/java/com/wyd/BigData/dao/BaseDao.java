@@ -112,7 +112,41 @@ public class BaseDao implements Serializable {
         }
         return playerLevelInfo;
     }
-
+    public void updateMarryInfoBath(List<MarryInfo> marryInfoList){
+        List<Object[]> paramsList = new ArrayList<>();
+        for(MarryInfo info:marryInfoList) {
+            paramsList.add(new Object[] { info.getMarryNum(), info.getDivorceNum(), info.getLuxuriousNum(), info.getLuxuryNum(), info.getRomanticNum(), info.getGeneralNum(),info.getServiceId()});
+        }
+        jdbcw.doBatch("update tab_marry_info set `marry_num`=?,`divorce_num`=?,`luxurious_num`=?,`luxury_num`=?,`romantic_num`=?,`general_num`=? where service_id=?",paramsList);
+    }
+    public void saveMarryInfo(MarryInfo info){
+        List<Object[]> paramsList = new ArrayList<>();
+        paramsList.add(new Object[] {info.getServiceId(),info.getMarryNum(),info.getDivorceNum(),info.getLuxuriousNum(),info.getLuxuryNum(),info.getRomanticNum(),info.getGeneralNum() });
+        jdbcw.doBatch("insert into tab_marry_info (`service_id`,`marry_num`,`divorce_num`,`luxurious_num`,`luxury_num`,`romantic_num`,`general_num`) values (?,?,?,?,?,?,?)",paramsList);
+    }
+    public MarryInfo getMarryInfo(int serviceId) {
+        MarryInfo marryInfo = new MarryInfo();
+        jdbcw.doQuery("select `id`,`service_id`,`marry_num`,`divorce_num`,`luxurious_num`,`luxury_num`,`romantic_num`,`general_num` from tab_marry_info where service_id=?", new Object[] { serviceId }, rs -> {
+            try {
+                while (rs.next()) {
+                    marryInfo.setId(rs.getInt(1));
+                    marryInfo.setServiceId(rs.getInt(2));
+                    marryInfo.setMarryNum(rs.getInt(3));
+                    marryInfo.setDivorceNum(rs.getInt(4));
+                    marryInfo.setLuxuriousNum(rs.getInt(5));
+                    marryInfo.setLuxuryNum(rs.getInt(6));
+                    marryInfo.setRomanticNum(rs.getInt(7));
+                    marryInfo.setGeneralNum(rs.getInt(8));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        if (marryInfo.getId() == 0) {
+            return null;
+        }
+        return marryInfo;
+    }
     public UpgradeInfo getUpgradeInfo(int serviceId, int playerLevel) {
         UpgradeInfo upgradeInfo = new UpgradeInfo();
         jdbcw.doQuery("select `id`,`service_id`,`player_level`,`total_time`,`total_count` from tab_upgrade_info where `service_id`=? and `player_level`=?", new Object[] { serviceId, playerLevel }, rs -> {
