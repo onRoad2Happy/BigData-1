@@ -4,7 +4,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.catalyst.plans.logical.Join;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
@@ -69,6 +68,8 @@ public class App {
             new DivorceRDD().call(strsRDD);
             // 新手引导
             new NoviceRDD().call(strsRDD);
+            // 挑战单人副本日志
+            new DareSingleMapRDD().call(strsRDD);
         });
         ssc.start();
         ssc.awaitTermination();

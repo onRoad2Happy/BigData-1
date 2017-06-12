@@ -547,11 +547,50 @@ public class BaseDao implements Serializable {
         }
         return null;
     }
+    public void saveSingleMapItemBatch(List<SinglemapItem> singlemapList) {
+        Map<String, List<SinglemapItem>> sigleMap = new HashMap<>();
+        for (SinglemapItem sigle : singlemapList) {
+            String today = sf.format(new Date(sigle.getStartTime() * 1000L));
+            sigleMap.computeIfAbsent(today, x -> new ArrayList<>()).add(sigle);
+        }
+        for (String today : sigleMap.keySet()) {
+            saveSingleMapItemBatch(today, sigleMap.get(today));
+        }
+    }
 
+    private void saveSingleMapItemBatch(String today, List<SinglemapItem> singlemapList) {
+        createSingleMapItem(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (SinglemapItem info : singlemapList) {
+            paramsList.add(new Object[] {info.getServiceId(), info.getPlayerId(), info.getMapId(), info.getStartTime(), info.getFinishTime(), info.getPassStar()});
+        }
+        String tableName = today + "_tab_singlemap_item";
+        jdbcw.doBatch("insert into " + tableName + " (service_id,player_id,map_id,start_time,finish_time,pass_star) values (?,?,?,?,?,?)", paramsList);
+    }
+    public void saveDareMapInfoBatch(List<DareMapInfo> daremapList) {
+        Map<String, List<DareMapInfo>> dareMap = new HashMap<>();
+        for (DareMapInfo daremap : daremapList) {
+            String today = sf.format(new Date(daremap.getRecordTime() * 1000L));
+            dareMap.computeIfAbsent(today, x -> new ArrayList<>()).add(daremap);
+        }
+        for (String today : dareMap.keySet()) {
+            saveDareMapInfoBatch(today, dareMap.get(today));
+        }
+    }
+
+    private void saveDareMapInfoBatch(String today, List<DareMapInfo> daremapList) {
+        createDaremapInfo(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (DareMapInfo info : daremapList) {
+            paramsList.add(new Object[] {info.getServiceId(), info.getTime(), info.getPlayerId() , info.getMapId() , info.getDifficult() , info.getAction() , info.getRecordTime(), info.getType() , info.getAccountId() , info.getChallengeType()});
+        }
+        String tableName = today + "_tab_daremap_log";
+        jdbcw.doBatch("insert into " + tableName + " (service_id,time,player_id,map_id,difficult,action,record_time,type,account_id,challenge_type) values (?,?,?,?,?,?,?,?,?,?)", paramsList);
+    }
     public void saveNoviceInfoBatch(List<NoviceInfo> noviceList) {
         Map<String, List<NoviceInfo>> noviceMap = new HashMap<>();
         for (NoviceInfo novice : noviceList) {
-            String today = sf.format(new Date(novice.getTime() * 1000l));
+            String today = sf.format(new Date(novice.getTime() * 1000L));
             noviceMap.computeIfAbsent(today, x -> new ArrayList<>()).add(novice);
         }
         for (String today : noviceMap.keySet()) {
@@ -760,6 +799,26 @@ public class BaseDao implements Serializable {
         }
         jdbcw.doBatch("update tab_player_info set mate_id=? where player_id=?", paramsList);
     }
+    public void updatePlayerTopDareSinglemapBatch(List<PlayerInfo> playerInfoList) {
+        if (playerInfoList.size() == 0)
+            return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getTopDareSinglemap(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set top_dare_singlemap=? where player_id=?", paramsList);
+    }
+    public void updatePlayerTopDareEliteSinglemapBatch(List<PlayerInfo> playerInfoList) {
+        if (playerInfoList.size() == 0)
+            return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getTopDareEliteSinglemap(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set top_dare_elite_singlemap=? where player_id=?", paramsList);
+    }
 
     public void updateRechargeBatch(List<PlayerInfo> playerInfoList) {
         if (playerInfoList.size() == 0)
@@ -787,7 +846,45 @@ public class BaseDao implements Serializable {
         paramsList.add(new Object[] { info.getPlayerCount(), info.getId() });
         jdbcw.doBatch("update tab_player_level_info set `player_count`=? where id=?", paramsList);
     }
-
+    private void createSingleMapItem(String today){
+       String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_singlemap_item`("//
+                +"`id` bigint(11) NOT NULL AUTO_INCREMENT,"
+                +"`service_id` int(11) DEFAULT 0," 
+                +"`player_id` int(11) DEFAULT 0," 
+                +"`map_id` int(11) DEFAULT 0,"
+                +"`start_time` int(11) DEFAULT 0,"
+                +"`finish_time` int(11) DEFAULT 0,"
+                +"`pass_star` int(11) DEFAULT 0,"
+                +"PRIMARY KEY (`id`),"
+                +"KEY `service_id` (`service_id`),"
+                +"KEY `player_id` (`player_id`),"
+                +"KEY `start_time` (`start_time`),"
+                +"KEY `map_id` (`map_id`)"
+                +")DEFAULT CHARSET=utf8" + TAB_DIRECTORY ;//
+        jdbcw.executeSQL(createSql);
+    }
+    private void createDaremapInfo(String today) {
+        String createSql="CREATE TABLE IF NOT EXISTS `"+today+"_tab_daremap_log`("//
+                +"`id` bigint(20) NOT NULL AUTO_INCREMENT,"
+                +"`service_id` int(11) DEFAULT NULL,"
+                +"`time` int(11) DEFAULT NULL,"
+                +"`record_time` int(11) DEFAULT NULL,"
+                +"`player_id` int(11) DEFAULT '0',"
+                +"`map_id` int(4) DEFAULT NULL,"
+                +"`difficult` int(4) DEFAULT NULL,"
+                +"`action` int(4) DEFAULT NULL,"
+                +"`type` int(4) DEFAULT NULL,"
+                +"`account_id` int(11) DEFAULT NULL,"
+                +"`challenge_type` int(11) DEFAULT NULL,"
+                +"PRIMARY KEY (`id`),"
+                +"KEY `service_id` (`service_id`),"
+                +"KEY `time` (`time`),"
+                +"KEY `player_id` (`player_id`),"
+                +"KEY `action` (`action`),"
+                +"KEY `map_id` (`map_id`)"
+                +") DEFAULT CHARSET=utf8" + TAB_DIRECTORY ;
+        jdbcw.executeSQL(createSql);
+    }
     private void createNoviceLog(String today) {
         String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_novice_log`("//
                 + "`id` bigint(20) NOT NULL AUTO_INCREMENT,"//
