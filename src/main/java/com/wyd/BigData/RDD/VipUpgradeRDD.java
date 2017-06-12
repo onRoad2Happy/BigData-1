@@ -37,7 +37,4 @@ public class VipUpgradeRDD implements Serializable {
         });
     }
 
-    @SuppressWarnings("serial") private JavaRDD<String[]> filter(JavaRDD<String[]> rdd) {
-        return rdd.filter(parts -> (parts.length >= 2 && "7".equals(parts[0])));
-    }
 }

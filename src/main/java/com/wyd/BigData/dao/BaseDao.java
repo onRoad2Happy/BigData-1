@@ -112,18 +112,55 @@ public class BaseDao implements Serializable {
         }
         return playerLevelInfo;
     }
-    public void updateMarryInfoBath(List<MarryInfo> marryInfoList){
+
+    public void updateMarryInfoBath(List<MarryInfo> marryInfoList, int type) {
+        if (marryInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
-        for(MarryInfo info:marryInfoList) {
-            paramsList.add(new Object[] { info.getMarryNum(), info.getDivorceNum(), info.getLuxuriousNum(), info.getLuxuryNum(), info.getRomanticNum(), info.getGeneralNum(),info.getServiceId()});
+        if (type == 0) {
+            for (MarryInfo info : marryInfoList) {
+                paramsList.add(new Object[] { info.getMarryNum(), info.getServiceId() });
+            }
+            jdbcw.doBatch("update tab_marry_info set `marry_num`=? where service_id=?", paramsList);
         }
-        jdbcw.doBatch("update tab_marry_info set `marry_num`=?,`divorce_num`=?,`luxurious_num`=?,`luxury_num`=?,`romantic_num`=?,`general_num`=? where service_id=?",paramsList);
+        if (type == -1) {
+            for (MarryInfo info : marryInfoList) {
+                paramsList.add(new Object[] { info.getDivorceNum(), info.getServiceId() });
+            }
+            jdbcw.doBatch("update tab_marry_info set `divorce_num`=? where service_id=?", paramsList);
+        }
+        if (type == 1) {
+            for (MarryInfo info : marryInfoList) {
+                paramsList.add(new Object[] { info.getLuxuriousNum(), info.getServiceId() });
+            }
+            jdbcw.doBatch("update tab_marry_info set `luxurious_num`=? where service_id=?", paramsList);
+        }
+        if (type == 2) {
+            for (MarryInfo info : marryInfoList) {
+                paramsList.add(new Object[] { info.getLuxuryNum(), info.getServiceId() });
+            }
+            jdbcw.doBatch("update tab_marry_info set `luxury_num`=? where service_id=?", paramsList);
+        }
+        if (type == 3) {
+            for (MarryInfo info : marryInfoList) {
+                paramsList.add(new Object[] { info.getRomanticNum(), info.getServiceId() });
+            }
+            jdbcw.doBatch("update tab_marry_info set `romantic_num`=? where service_id=?", paramsList);
+        }
+        if (type == 4) {
+            for (MarryInfo info : marryInfoList) {
+                paramsList.add(new Object[] { info.getGeneralNum(), info.getServiceId() });
+            }
+            jdbcw.doBatch("update tab_marry_info set `general_num`=? where service_id=?", paramsList);
+        }
     }
-    public void saveMarryInfo(MarryInfo info){
+
+    public void saveMarryInfo(MarryInfo info) {
         List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] {info.getServiceId(),info.getMarryNum(),info.getDivorceNum(),info.getLuxuriousNum(),info.getLuxuryNum(),info.getRomanticNum(),info.getGeneralNum() });
-        jdbcw.doBatch("insert into tab_marry_info (`service_id`,`marry_num`,`divorce_num`,`luxurious_num`,`luxury_num`,`romantic_num`,`general_num`) values (?,?,?,?,?,?,?)",paramsList);
+        paramsList.add(new Object[] { info.getServiceId(), info.getMarryNum(), info.getDivorceNum(), info.getLuxuriousNum(), info.getLuxuryNum(), info.getRomanticNum(), info.getGeneralNum() });
+        jdbcw.doBatch("insert into tab_marry_info (`service_id`,`marry_num`,`divorce_num`,`luxurious_num`,`luxury_num`,`romantic_num`,`general_num`) values (?,?,?,?,?,?,?)", paramsList);
     }
+
     public MarryInfo getMarryInfo(int serviceId) {
         MarryInfo marryInfo = new MarryInfo();
         jdbcw.doQuery("select `id`,`service_id`,`marry_num`,`divorce_num`,`luxurious_num`,`luxury_num`,`romantic_num`,`general_num` from tab_marry_info where service_id=?", new Object[] { serviceId }, rs -> {
@@ -147,6 +184,7 @@ public class BaseDao implements Serializable {
         }
         return marryInfo;
     }
+
     public UpgradeInfo getUpgradeInfo(int serviceId, int playerLevel) {
         UpgradeInfo upgradeInfo = new UpgradeInfo();
         jdbcw.doQuery("select `id`,`service_id`,`player_level`,`total_time`,`total_count` from tab_upgrade_info where `service_id`=? and `player_level`=?", new Object[] { serviceId, playerLevel }, rs -> {
@@ -187,6 +225,11 @@ public class BaseDao implements Serializable {
             return null;
         }
         return guildInfo;
+    }
+
+    public ServiceInfo getServiceInfo(int playerId) {
+        PlayerInfo playerInfo = getPlayerInfo(playerId, true);
+        return new ServiceInfo(playerInfo.getServiceId(), playerInfo.getChannelId(), playerInfo.getAccountId());
     }
 
     public PlayerInfo getPlayerInfo(int playerId) {
@@ -505,6 +548,27 @@ public class BaseDao implements Serializable {
         return null;
     }
 
+    public void saveNoviceInfoBatch(List<NoviceInfo> noviceList) {
+        Map<String, List<NoviceInfo>> noviceMap = new HashMap<>();
+        for (NoviceInfo novice : noviceList) {
+            String today = sf.format(new Date(novice.getTime() * 1000l));
+            noviceMap.computeIfAbsent(today, x -> new ArrayList<>()).add(novice);
+        }
+        for (String today : noviceMap.keySet()) {
+            saveNoviceInfoBatch(today, noviceMap.get(today));
+        }
+    }
+
+    private void saveNoviceInfoBatch(String today, List<NoviceInfo> noviceList) {
+        createNoviceLog(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (NoviceInfo info : noviceList) {
+            paramsList.add(new Object[] { info.getServiceId(), info.getTime(), info.getPlayerId(), info.getCouresId(), info.getCouresStep(), info.getAccountId() });
+        }
+        String tableName = today + "_tab_novice_log";
+        jdbcw.doBatch("insert into " + tableName + " (service_id,time,player_id,coures_id,coures_step,account_id) values (?,?,?,?,?,?)", paramsList);
+    }
+
     public void saveLoginInfoBatch(List<LoginInfo> accountList) {
         Map<String, List<LoginInfo>> accountMap = new HashMap<>();
         for (LoginInfo account : accountList) {
@@ -621,7 +685,8 @@ public class BaseDao implements Serializable {
     }
 
     public void updateVipLevelBatch(List<PlayerInfo> playerInfoList) {
-        if(playerInfoList.size()==0)return;
+        if (playerInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
             paramsList.add(new Object[] { info.getVipLevel(), info.getPlayerId() });
@@ -630,8 +695,20 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("update tab_player_info set vip_level=? where player_id=?", paramsList);
     }
 
+    public void updatePlayerNoviceInfoBatch(List<PlayerInfo> playerInfoList) {
+        if (playerInfoList.size() == 0)
+            return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getTiroTime(), info.getCouresId(), info.getCouresStep(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set `tiro_time`=?,`coures_id`=?,`coures_step`=? where player_id=?", paramsList);
+    }
+
     public void updatePlayerUpgradeBatch(List<PlayerInfo> playerInfoList) {
-        if(playerInfoList.size()==0)return;
+        if (playerInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
             paramsList.add(new Object[] { info.getPlayerLevel(), info.getUpgradeTime(), info.getPlayerId() });
@@ -641,7 +718,8 @@ public class BaseDao implements Serializable {
     }
 
     public void updatePlayerLoginInfoBatch(List<PlayerInfo> playerInfoList) {
-        if(playerInfoList.size()==0)return;
+        if (playerInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
             paramsList.add(new Object[] { info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getPlayerId() });
@@ -651,7 +729,8 @@ public class BaseDao implements Serializable {
     }
 
     public void updateTotalOnlineBatch(List<PlayerInfo> playerInfoList) {
-        if(playerInfoList.size()==0)return;
+        if (playerInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
             paramsList.add(new Object[] { info.getTotalOnline(), info.getVigor(), info.getPlayerId() });
@@ -661,7 +740,8 @@ public class BaseDao implements Serializable {
     }
 
     public void updatePlayerGuildInfoBatch(List<PlayerInfo> playerInfoList) {
-        if(playerInfoList.size()==0)return;
+        if (playerInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
             paramsList.add(new Object[] { info.getGuildId(), info.getPlayerId() });
@@ -669,8 +749,10 @@ public class BaseDao implements Serializable {
         }
         jdbcw.doBatch("update tab_player_info set guild_id=? where player_id=?", paramsList);
     }
+
     public void updatePlayerMarryInfoBatch(List<PlayerInfo> playerInfoList) {
-        if(playerInfoList.size()==0)return;
+        if (playerInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
             paramsList.add(new Object[] { info.getMateId(), info.getPlayerId() });
@@ -680,7 +762,8 @@ public class BaseDao implements Serializable {
     }
 
     public void updateRechargeBatch(List<PlayerInfo> playerInfoList) {
-        if(playerInfoList.size()==0)return;
+        if (playerInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
             paramsList.add(new Object[] { info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
@@ -690,7 +773,8 @@ public class BaseDao implements Serializable {
     }
 
     public void updateUpgradeInfoBatch(List<UpgradeInfo> upgradeInfoList) {
-        if(upgradeInfoList.size()==0)return;
+        if (upgradeInfoList.size() == 0)
+            return;
         List<Object[]> paramsList = new ArrayList<>();
         for (UpgradeInfo info : upgradeInfoList) {
             paramsList.add(new Object[] { info.getTotalTime(), info.getTotalCount(), info.getId() });
@@ -702,6 +786,23 @@ public class BaseDao implements Serializable {
         List<Object[]> paramsList = new ArrayList<>();
         paramsList.add(new Object[] { info.getPlayerCount(), info.getId() });
         jdbcw.doBatch("update tab_player_level_info set `player_count`=? where id=?", paramsList);
+    }
+
+    private void createNoviceLog(String today) {
+        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_novice_log`("//
+                + "`id` bigint(20) NOT NULL AUTO_INCREMENT,"//
+                + "`service_id` int(11) DEFAULT NULL,"//
+                + "`time` int(11) DEFAULT NULL,"//
+                + "`player_id` int(11) DEFAULT '0',"//
+                + "`coures_id` int(4) DEFAULT NULL,"//
+                + "`coures_step` int(4) DEFAULT NULL,"//
+                + "`account_id` int(11) DEFAULT NULL,"//
+                + "PRIMARY KEY (`id`),"//
+                + "KEY `service_id` (`service_id`),"//
+                + "KEY `time` (`time`),"//
+                + "KEY `player_id` (`player_id`)"//
+                + ") DEFAULT CHARSET=utf8" + TAB_DIRECTORY;//
+        jdbcw.executeSQL(createSql);
     }
 
     private void createLoginInfo(String today) {

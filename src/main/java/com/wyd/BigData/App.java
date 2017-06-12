@@ -65,6 +65,10 @@ public class App {
             new QuitGuildRDD().call(strsRDD);
             // 结婚
             new MarryRDD().call(strsRDD);
+            // 离婚
+            new DivorceRDD().call(strsRDD);
+            // 新手引导
+            new NoviceRDD().call(strsRDD);
         });
         ssc.start();
         ssc.awaitTermination();
