@@ -12,6 +12,15 @@ public class SinglemapItem  implements Serializable {
     private int               startTime;
     private int               finishTime;
     private int				  passStar; 	//通关星级
+    private int               dataTime;//数据时间
+
+    public int getDataTime() {
+        return dataTime;
+    }
+
+    public void setDataTime(int dataTime) {
+        this.dataTime = dataTime;
+    }
 
     public int getId() {
         return id;

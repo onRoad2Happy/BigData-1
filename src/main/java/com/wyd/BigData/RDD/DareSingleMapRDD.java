@@ -17,9 +17,42 @@ public class DareSingleMapRDD implements Serializable {
         JavaRDD<String[]> daresingleRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
         if (daresingleRDD.count() == 0)
             return;
+        JavaPairRDD<String, Integer> counts = daresingleRDD.mapToPair(datas -> {
+            BaseDao dao = BaseDao.getInstance();
+            int serviceId = -1;
+            int playerId = Integer.parseInt(datas[2]);
+            ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
+            if (serviceInfo != null) {
+                serviceId = serviceInfo.getServiceId();
+            }
+            return new Tuple2<>(serviceId + "_" + datas[3], 1);
+        }).reduceByKey((x, y) -> x + y);
+        counts.foreachPartition(it -> {
+            List<SinglemapInfo> singlemapInfoList = new ArrayList<>();
+            BaseDao dao = BaseDao.getInstance();
+            while (it.hasNext()) {
+                Tuple2<String, Integer> t = it.next();
+                String[] params = t._1().split("_");
+                int serviceId = Integer.parseInt(params[0]);
+                int mapId = Integer.parseInt(params[1]);
+                int count = t._2();
+                SinglemapInfo info = dao.getSinglemapInfo(serviceId, mapId);
+                if (info == null) {
+                    info = new SinglemapInfo();
+                    info.setMapId(mapId);
+                    info.setServiceId(serviceId);
+                    info.setDareCount(count);
+                    dao.saveSinglemapInfo(info);
+                } else {
+                    info.setDareCount(count + info.getDareCount());
+                    singlemapInfoList.add(info);
+                }
+            }
+            dao.updateSinglemapDareCountBatch(singlemapInfoList);
+        });
         // KEY player_maptype VAL mapId
-        JavaPairRDD<String, Integer> maxStepRDD = daresingleRDD.mapToPair(datas -> new Tuple2<>(datas[2] + "_" + (datas[3].startsWith("1") ? "1" : "2"), Integer.parseInt(datas[3]))).reduceByKey(Math::max);
-        maxStepRDD.foreachPartition(it -> {
+        JavaPairRDD<String, Integer> maxMapRDD = daresingleRDD.mapToPair(datas -> new Tuple2<>(datas[2] + "_" + (datas[3].startsWith("1") ? "1" : "2"), Integer.parseInt(datas[3]))).reduceByKey(Math::max);
+        maxMapRDD.foreachPartition(it -> {
             BaseDao dao = BaseDao.getInstance();
             List<PlayerInfo> playerInfoList1 = new ArrayList<>();
             List<PlayerInfo> playerInfoList2 = new ArrayList<>();
@@ -31,10 +64,10 @@ public class DareSingleMapRDD implements Serializable {
                 int mapId = t._2();
                 PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
                 if (playerInfo != null) {
-                    if (mapType == 1 && (playerInfo.getTopDareSinglemap() > 20000 || playerInfo.getTopDareSinglemap() < mapId)){
+                    if (mapType == 1 && (playerInfo.getTopDareSinglemap() > 20000 || playerInfo.getTopDareSinglemap() < mapId)) {
                         playerInfo.setTopDareSinglemap(mapId);
                         playerInfoList1.add(playerInfo);
-                    } else if(mapType == 2 && playerInfo.getTopDareEliteSinglemap() < mapId) {
+                    } else if (mapType == 2 && playerInfo.getTopDareEliteSinglemap() < mapId) {
                         playerInfo.setTopDareEliteSinglemap(mapId);
                         playerInfoList2.add(playerInfo);
                     }
@@ -43,13 +76,13 @@ public class DareSingleMapRDD implements Serializable {
             dao.updatePlayerTopDareSinglemapBatch(playerInfoList1);
             dao.updatePlayerTopDareEliteSinglemapBatch(playerInfoList2);
         });
-        daresingleRDD.foreachPartition(it->{
+        daresingleRDD.foreachPartition(it -> {
             BaseDao dao = BaseDao.getInstance();
             List<DareMapInfo> dareMapInfoList = new ArrayList<>();
             List<SinglemapItem> singlemapItemList = new ArrayList<>();
-            while(it.hasNext()){
-                String[] datas=it.next();
-                long dataTime =  Long.parseLong(datas[1]);
+            while (it.hasNext()) {
+                String[] datas = it.next();
+                long dataTime = Long.parseLong(datas[1]);
                 int playerId = Integer.parseInt(datas[2]);
                 int mapId = Integer.parseInt(datas[3]);
                 ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
@@ -75,9 +108,6 @@ public class DareSingleMapRDD implements Serializable {
             }
             dao.saveDareMapInfoBatch(dareMapInfoList);
             dao.saveSingleMapItemBatch(singlemapItemList);
-
-
-
         });
     }
 }

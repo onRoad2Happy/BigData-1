@@ -25,6 +25,7 @@ public class DareMapInfo implements java.io.Serializable {
     private int               recordTime;
     private int               challengeType;//0 挑战  1 扫荡
 
+
     public int getId() {
         return id;
     }

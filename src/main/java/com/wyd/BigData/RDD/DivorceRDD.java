@@ -72,7 +72,6 @@ public class DivorceRDD implements Serializable {
                     list1.add(marryInfo);
                 }
             }
-            //不要更新未修改的值，未修改的值有可能在其它excutor里更改了，此时更新会把旧的值增覆盖上去
             dao.updateMarryInfoBath(list1, -1);
 
         });

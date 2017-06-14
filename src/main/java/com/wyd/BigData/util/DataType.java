@@ -153,30 +153,6 @@ public class DataType {
     /** 标识号-单人副本扫荡 */
     public static final int MARKNUM_SAODANG_SINGLEMAP	= 76;
 
-    //    /** 标识号-橙装调品 */
-    //    public static final int MARKNUM_ADJUST	  			= 73;
-    //    /** 标识号-橙装调品还原 */
-    //    public static final int MARKNUM_ADJUST_BACK	  		= 75;
-    //    /** 标识号-开启圣光宝匣 */
-    //    public static final int MARKNUM_OPENBOX    		 	= 79;
-    //	/** 标识号-装备道具 */
-    //    public static final int MARKNUM_PROP_EQUIP      	= 80;
-    //    /** 标识号-使用点金手 */
-    //    public static final int MARKNUM_HAND_MIDAS      	= 81;
-    //    /** 标识号-使用卡套 */
-    //    public static final int MARKNUM_CARD_SET	      	= 82;
-    //    /** 标识号-时装续费 */
-    //    public static final int MARKNUM_RENEW	      	 	= 83;
-    //    /** 标识号-圣光融合 */
-    //    public static final int MARKNUM_FUSE	      	 	= 84;
-    //    /** 标识号-踢出公会 */
-    //    public static final int MARKNUM_KICK_GUILD	      	= 85;
-    //    /** 标识号-商城向好友索取 */
-    //    public static final int MARKNUM_CLAIM	      	 	= 86;
-    //    /** 标识号-排行榜膜拜 */
-    //    public static final int MARKNUM_WORSHIP	      	 	= 87;
-    //    /** 标识号-遇到黑市商人 */
-    //    public static final int MARKNUM_BLACKMARKET_MEET	= 88;
     /** 标识号-许愿池 */
     public static final int MARKNUM_WISHING_WELL		= 95;
 

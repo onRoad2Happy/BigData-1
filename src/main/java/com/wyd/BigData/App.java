@@ -70,6 +70,8 @@ public class App {
             new NoviceRDD().call(strsRDD);
             // 挑战单人副本日志
             new DareSingleMapRDD().call(strsRDD);
+            // 扫荡单人副本
+            new MopSingleMapRDD().call(strsRDD);
         });
         ssc.start();
         ssc.awaitTermination();
