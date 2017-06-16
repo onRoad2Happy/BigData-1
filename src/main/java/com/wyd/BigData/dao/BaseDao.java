@@ -890,6 +890,35 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("update tab_player_info set total_online=?,vigor=? where player_id=?", paramsList);
     }
 
+    public void updatePlayerDiamondInfoBatch(List<PlayerInfo> playerInfoList) {
+        if (playerInfoList.size() == 0)
+            return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getDiamond(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set diamond=? where player_id=?", paramsList);
+    }
+
+    public void updatePlayerGoldInfoBatch(List<PlayerInfo> playerInfoList) {
+        if (playerInfoList.size() == 0)
+            return;
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerInfo info : playerInfoList) {
+            paramsList.add(new Object[] { info.getGold(), info.getPlayerId() });
+            playerInfoMap.put(info.getPlayerId(), info);
+        }
+        jdbcw.doBatch("update tab_player_info set gold=? where player_id=?", paramsList);
+    }
+
+    public void updatePlayerFirstCostInfo(PlayerInfo playerInfo) {
+        List<Object[]> paramsList = new ArrayList<>();
+        paramsList.add(new Object[] { playerInfo.getFirstCostTime(), playerInfo.getFirstCostLevel(), playerInfo.getFirstCostNum(), playerInfo.getFirstCostItem(), playerInfo.getPlayerId() });
+        playerInfoMap.put(playerInfo.getPlayerId(), playerInfo);
+        jdbcw.doBatch("update tab_player_info set first_cost_time=?,first_cost_level=?,first_cost_num=?,first_cost_item=? where player_id=?", paramsList);
+    }
+
     public void updatePlayerGuildInfoBatch(List<PlayerInfo> playerInfoList) {
         if (playerInfoList.size() == 0)
             return;

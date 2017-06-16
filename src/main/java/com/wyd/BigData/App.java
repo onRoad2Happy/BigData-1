@@ -72,6 +72,9 @@ public class App {
             new DareSingleMapRDD().call(strsRDD);
             // 扫荡单人副本
             new MopSingleMapRDD().call(strsRDD);
+            // 物品流水
+            new ItemLogRDD().call(strsRDD);
+            
         });
         ssc.start();
         ssc.awaitTermination();
