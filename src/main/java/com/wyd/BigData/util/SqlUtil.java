@@ -86,6 +86,6 @@ public class SqlUtil {
     }
 
     public static void main(String[] args) {
-        SqlUtil.getSQLStr("2017_06_13_tab_daremap_log","test");
+        SqlUtil.getSQLStr("tab_teammap_info","test");
     }
 }

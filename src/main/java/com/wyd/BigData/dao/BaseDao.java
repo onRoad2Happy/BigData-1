@@ -117,6 +117,64 @@ public class BaseDao implements Serializable {
         paramsList.add(new Object[] { info.getServiceId(), info.getMapId(), info.getTotalTime(), info.getDareCount(), info.getPassCount(), info.getStar1Count(), info.getStar2Count(), info.getStar3Count() });
         jdbcw.doBatch("insert into tab_singlemap_info (`service_id`,`map_id`,`total_time`,`dare_count`,`pass_count`,`star1_count`,`star2_count`,`star3_count`) values (?,?,?,?,?,?,?,?)", paramsList);
     }
+    public void updateTeammapInfoBath(List<TeammapInfo> teammapInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (TeammapInfo info : teammapInfoList) {
+            paramsList.add(new Object[] {info.getSTotalTime(),info.getSDareCount(),info.getSPassCount(),info.getSMember1Count(),info.getSMember2Count(),info.getSMember3Count(),info.getDTotalTime(),info.getDDareCount(),info.getDPassCount(),info.getDMember1Count(),info.getDMember2Count(),info.getDMember3Count(),info.getHTotalTime(),info.getHDareCount(),info.getHPassCount(),info.getHMember1Count(),info.getHMember2Count(),info.getHMember3Count() , info.getId() });
+        }
+        jdbcw.doBatch("update tab_teammap_info set `s_total_time`=?,`s_dare_count`=?,`s_pass_count`=?,`s_member1_count`=?,`s_member2_count`=?,`s_member3_count`=?,`d_total_time`=?,`d_dare_count`=?,`d_pass_count`=?,`d_member1_count`=?,`d_member2_count`=?,`d_member3_count`=?,`h_total_time`=?,`h_dare_count`=?,`h_pass_count`=?,`h_member1_count`=?,`h_member2_count`=?,`h_member3_count`=? where id=?", paramsList);
+    }
+    public void saveTeammapInfoBatch(List<TeammapInfo> teammapInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (TeammapInfo info : teammapInfoList) {
+            paramsList.add(new Object[] {info.getServiceId(),info.getSectionId(),info.getSTotalTime(),info.getSDareCount(),info.getSPassCount(),info.getSMember1Count(),info.getSMember2Count(),info.getSMember3Count(),info.getSLotteryCount(),info.getSLotteryDeplete(),info.getDTotalTime(),info.getDDareCount(),info.getDPassCount(),info.getDMember1Count(),info.getDMember2Count(),info.getDMember3Count(),info.getDLotteryCount(),info.getDLotteryDeplete(),info.getHTotalTime(),info.getHDareCount(),info.getHPassCount(),info.getHMember1Count(),info.getHMember2Count(),info.getHMember3Count(),info.getHLotteryCount(),info.getHLotteryDeplete(),info.getResetCount(),info.getResetDeplete() });
+        }
+        jdbcw.doBatch("insert into tab_teammap_info (`service_id`,`section_id`,`s_total_time`,`s_dare_count`,`s_pass_count`,`s_member1_count`,`s_member2_count`,`s_member3_count`,`s_lottery_count`,`s_lottery_deplete`,`d_total_time`,`d_dare_count`,`d_pass_count`,`d_member1_count`,`d_member2_count`,`d_member3_count`,`d_lottery_count`,`d_lottery_deplete`,`h_total_time`,`h_dare_count`,`h_pass_count`,`h_member1_count`,`h_member2_count`,`h_member3_count`,`h_lottery_count`,`h_lottery_deplete`,`reset_count`,`reset_deplete`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
+    }
+    public TeammapInfo getTeammapInfo(int serviceId,int sectionId) {
+        TeammapInfo teammapInfo = new TeammapInfo();
+        jdbcw.doQuery("select `id`,`service_id`,`section_id`,`s_total_time`,`s_dare_count`,`s_pass_count`,`s_member1_count`,`s_member2_count`,`s_member3_count`,`s_lottery_count`,`s_lottery_deplete`,`d_total_time`,`d_dare_count`,`d_pass_count`,`d_member1_count`,`d_member2_count`,`d_member3_count`,`d_lottery_count`,`d_lottery_deplete`,`h_total_time`,`h_dare_count`,`h_pass_count`,`h_member1_count`,`h_member2_count`,`h_member3_count`,`h_lottery_count`,`h_lottery_deplete`,`reset_count`,`reset_deplete` from tab_teammap_info where `service_id`=? and `section_id`=? ORDER BY id DESC LIMIT 1", new Object[] { serviceId,sectionId }, rs -> {
+            try {
+                while (rs.next()) {
+                    teammapInfo.setId(rs.getInt(1));
+                    teammapInfo.setServiceId(rs.getInt(2));
+                    teammapInfo.setSectionId(rs.getInt(3));
+                    teammapInfo.setSTotalTime(rs.getInt(4));
+                    teammapInfo.setSDareCount(rs.getInt(5));
+                    teammapInfo.setSPassCount(rs.getInt(6));
+                    teammapInfo.setSMember1Count(rs.getInt(7));
+                    teammapInfo.setSMember2Count(rs.getInt(8));
+                    teammapInfo.setSMember3Count(rs.getInt(9));
+                    teammapInfo.setSLotteryCount(rs.getInt(10));
+                    teammapInfo.setSLotteryDeplete(rs.getInt(11));
+                    teammapInfo.setDTotalTime(rs.getInt(12));
+                    teammapInfo.setDDareCount(rs.getInt(13));
+                    teammapInfo.setDPassCount(rs.getInt(14));
+                    teammapInfo.setDMember1Count(rs.getInt(15));
+                    teammapInfo.setDMember2Count(rs.getInt(16));
+                    teammapInfo.setDMember3Count(rs.getInt(17));
+                    teammapInfo.setDLotteryCount(rs.getInt(18));
+                    teammapInfo.setDLotteryDeplete(rs.getInt(19));
+                    teammapInfo.setHTotalTime(rs.getInt(20));
+                    teammapInfo.setHDareCount(rs.getInt(21));
+                    teammapInfo.setHPassCount(rs.getInt(22));
+                    teammapInfo.setHMember1Count(rs.getInt(23));
+                    teammapInfo.setHMember2Count(rs.getInt(24));
+                    teammapInfo.setHMember3Count(rs.getInt(25));
+                    teammapInfo.setHLotteryCount(rs.getInt(26));
+                    teammapInfo.setHLotteryDeplete(rs.getInt(27));
+                    teammapInfo.setResetCount(rs.getInt(28));
+                    teammapInfo.setResetDeplete(rs.getInt(29));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        if (teammapInfo.getId() != 0) {
+            return teammapInfo;
+        }
+        return null;
+    }
 
     public AccountInfo getAccountInfo(int accountId) {
         if (accountInfoMap.containsKey(accountId))
