@@ -117,6 +117,45 @@ public class BaseDao implements Serializable {
         paramsList.add(new Object[] { info.getServiceId(), info.getMapId(), info.getTotalTime(), info.getDareCount(), info.getPassCount(), info.getStar1Count(), info.getStar2Count(), info.getStar3Count() });
         jdbcw.doBatch("insert into tab_singlemap_info (`service_id`,`map_id`,`total_time`,`dare_count`,`pass_count`,`star1_count`,`star2_count`,`star3_count`) values (?,?,?,?,?,?,?,?)", paramsList);
     }
+    public void updatePlayerTeammapBath(List<PlayerTeammap> teammapInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerTeammap info : teammapInfoList) {
+            paramsList.add(new Object[] {info.getsDareCount(),info.getsPassCount(),info.getdDareCount(),info.getdPassCount(),info.gethDareCount(),info.gethPassCount(), info.getId() });
+        }
+        jdbcw.doBatch("update tab_player_teammap set `s_dare_count`=?,`s_pass_count`=?,`d_dare_count`=?,`d_pass_count`=?,`h_dare_count`=?,`h_pass_count`=? from tab_player_teammap  where id=?", paramsList);
+    }
+    public void savePlayerTeammapBatch(List<PlayerTeammap> teammapInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (PlayerTeammap info : teammapInfoList) {
+            paramsList.add(new Object[] {info.getServiceId(),info.getPlayerId(),info.getSectionId(),info.getsDareCount(),info.getsPassCount(),info.getdDareCount(),info.getdPassCount(),info.gethDareCount(),info.gethPassCount()});
+        }
+        jdbcw.doBatch("insert into tab_player_teammap (`service_id`,`player_id`,`section_id`,`s_dare_count`,`s_pass_count`,`d_dare_count`,`d_pass_count`,`h_dare_count`,`h_pass_count`) values (?,?,?,?,?,?,?,?,?)", paramsList);
+    }
+    public PlayerTeammap getPlayerTeammap(int playerId,int sectionId){
+        PlayerTeammap playerTeammap=new PlayerTeammap();
+        jdbcw.doQuery("select `id`,`service_id`,`player_id`,`section_id`,`s_dare_count`,`s_pass_count`,`d_dare_count`,`d_pass_count`,`h_dare_count`,`h_pass_count` from tab_player_teammap where `player_id`=? and `section_id`=? ORDER BY id DESC LIMIT 1", new Object[] { playerId,sectionId }, rs -> {
+            try {
+                while (rs.next()) {
+                    playerTeammap.setId(rs.getInt(1));
+                    playerTeammap.setServiceId(rs.getInt(2));
+                    playerTeammap.setPlayerId(rs.getInt(3));
+                    playerTeammap.setSectionId(rs.getInt(4));
+                    playerTeammap.setsDareCount(rs.getInt(5));
+                    playerTeammap.setsPassCount(rs.getInt(6));
+                    playerTeammap.setdDareCount(rs.getInt(7));
+                    playerTeammap.setdPassCount(rs.getInt(8));
+                    playerTeammap.sethDareCount(rs.getInt(9));
+                    playerTeammap.sethPassCount(rs.getInt(10));
+                }
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+        });
+        if(playerTeammap.getId()!=0){
+            return playerTeammap;
+        }
+        return null;
+    }
     public void updateTeammapInfoBath(List<TeammapInfo> teammapInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (TeammapInfo info : teammapInfoList) {
@@ -131,6 +170,7 @@ public class BaseDao implements Serializable {
         }
         jdbcw.doBatch("insert into tab_teammap_info (`service_id`,`section_id`,`s_total_time`,`s_dare_count`,`s_pass_count`,`s_member1_count`,`s_member2_count`,`s_member3_count`,`s_lottery_count`,`s_lottery_deplete`,`d_total_time`,`d_dare_count`,`d_pass_count`,`d_member1_count`,`d_member2_count`,`d_member3_count`,`d_lottery_count`,`d_lottery_deplete`,`h_total_time`,`h_dare_count`,`h_pass_count`,`h_member1_count`,`h_member2_count`,`h_member3_count`,`h_lottery_count`,`h_lottery_deplete`,`reset_count`,`reset_deplete`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
     }
+
     public TeammapInfo getTeammapInfo(int serviceId,int sectionId) {
         TeammapInfo teammapInfo = new TeammapInfo();
         jdbcw.doQuery("select `id`,`service_id`,`section_id`,`s_total_time`,`s_dare_count`,`s_pass_count`,`s_member1_count`,`s_member2_count`,`s_member3_count`,`s_lottery_count`,`s_lottery_deplete`,`d_total_time`,`d_dare_count`,`d_pass_count`,`d_member1_count`,`d_member2_count`,`d_member3_count`,`d_lottery_count`,`d_lottery_deplete`,`h_total_time`,`h_dare_count`,`h_pass_count`,`h_member1_count`,`h_member2_count`,`h_member3_count`,`h_lottery_count`,`h_lottery_deplete`,`reset_count`,`reset_deplete` from tab_teammap_info where `service_id`=? and `section_id`=? ORDER BY id DESC LIMIT 1", new Object[] { serviceId,sectionId }, rs -> {

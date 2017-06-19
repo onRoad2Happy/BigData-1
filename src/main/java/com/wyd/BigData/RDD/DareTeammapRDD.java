@@ -164,8 +164,8 @@ public class DareTeammapRDD implements Serializable {
             }
             return list.iterator();
         });
-
-        playerTeammapRDD.mapToPair(datas -> {
+        //KEY:playerId_sectionId VAL:PlayerTeammap
+        JavaPairRDD<String,PlayerTeammap> playerTeammapCounts=playerTeammapRDD.mapToPair(datas -> {
             PlayerTeammap playerTeammap = new PlayerTeammap();
             String playerId = datas[0];
             String sectionId =datas[1];
@@ -191,7 +191,7 @@ public class DareTeammapRDD implements Serializable {
                 }
                 break;
             }
-            String key = sectionId + "_" + playerId;
+            String key = playerId+ "_" +sectionId;
             return new Tuple2<>(key, playerTeammap);
         }).reduceByKey((x, y) -> {
             PlayerTeammap playerTeammap = new PlayerTeammap();
@@ -202,6 +202,38 @@ public class DareTeammapRDD implements Serializable {
             playerTeammap.sethDareCount(x.gethDareCount()+y.gethDareCount());
             playerTeammap.sethPassCount(x.gethPassCount()+y.gethPassCount());
             return playerTeammap;
+        });
+        playerTeammapCounts.foreachPartition(it->{
+            BaseDao dao = BaseDao.getInstance();
+            List<PlayerTeammap> saveList = new ArrayList<>();
+            List<PlayerTeammap> updateList = new ArrayList<>();
+            while (it.hasNext()){
+                Tuple2<String,PlayerTeammap> t=it.next();
+                String [] params= t._1().split("_");
+                PlayerTeammap info = t._2();
+                int serviceId=-1;
+                int playerId= Integer.parseInt(params[0]);
+                int sectionId= Integer.parseInt(params[1]);
+                PlayerTeammap playerTeammap =  dao.getPlayerTeammap(playerId,sectionId);
+                if(playerTeammap==null){
+                    info.setPlayerId(playerId);
+                    info.setSectionId(sectionId);
+                    ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
+                    info.setServiceId(serviceInfo.getServiceId());
+                    saveList.add(info);
+                }else{
+                    playerTeammap.setsDareCount(playerTeammap.getsDareCount()+info.getsDareCount());
+                    playerTeammap.setsPassCount(playerTeammap.getsPassCount()+info.getsPassCount());
+                    playerTeammap.setdDareCount(playerTeammap.getdDareCount()+info.getdDareCount());
+                    playerTeammap.setdPassCount(playerTeammap.getdPassCount()+info.getdPassCount());
+                    playerTeammap.sethDareCount(playerTeammap.gethDareCount()+info.gethDareCount());
+                    playerTeammap.sethPassCount(playerTeammap.gethPassCount()+info.gethPassCount());
+                    updateList.add(playerTeammap);
+                }
+            }
+            dao.savePlayerTeammapBatch(saveList);
+            dao.updatePlayerTeammapBath(updateList);
+
         });
     }
 }
