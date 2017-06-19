@@ -173,21 +173,21 @@ public class DareTeammapRDD implements Serializable {
             int isWin = Integer.parseInt(datas[3]);
             switch (difficulty) {
             case 1:
-                playerTeammap.setsDareCount(1);
+                playerTeammap.setSDareCount(1);
                 if (isWin == 1) {
-                    playerTeammap.setsPassCount(1);
+                    playerTeammap.setSPassCount(1);
                 }
                 break;
             case 2:
-                playerTeammap.setdDareCount(1);
+                playerTeammap.setDDareCount(1);
                 if (isWin == 1) {
-                    playerTeammap.setdPassCount(1);
+                    playerTeammap.setDPassCount(1);
                 }
                 break;
             case 3:
-                playerTeammap.sethDareCount(1);
+                playerTeammap.setHDareCount(1);
                 if (isWin == 1) {
-                    playerTeammap.sethPassCount(1);
+                    playerTeammap.setHPassCount(1);
                 }
                 break;
             }
@@ -195,12 +195,12 @@ public class DareTeammapRDD implements Serializable {
             return new Tuple2<>(key, playerTeammap);
         }).reduceByKey((x, y) -> {
             PlayerTeammap playerTeammap = new PlayerTeammap();
-            playerTeammap.setsDareCount(x.getsDareCount()+y.getsDareCount());
-            playerTeammap.setsPassCount(x.getsPassCount()+y.getsPassCount());
-            playerTeammap.setdDareCount(x.getdDareCount()+y.getdDareCount());
-            playerTeammap.setdPassCount(x.getdPassCount()+y.getdPassCount());
-            playerTeammap.sethDareCount(x.gethDareCount()+y.gethDareCount());
-            playerTeammap.sethPassCount(x.gethPassCount()+y.gethPassCount());
+            playerTeammap.setSDareCount(x.getSDareCount()+y.getSDareCount());
+            playerTeammap.setSPassCount(x.getSPassCount()+y.getSPassCount());
+            playerTeammap.setDDareCount(x.getDDareCount()+y.getDDareCount());
+            playerTeammap.setDPassCount(x.getDPassCount()+y.getDPassCount());
+            playerTeammap.setHDareCount(x.getHDareCount()+y.getHDareCount());
+            playerTeammap.setHPassCount(x.getHPassCount()+y.getHPassCount());
             return playerTeammap;
         });
         playerTeammapCounts.foreachPartition(it->{
@@ -222,12 +222,12 @@ public class DareTeammapRDD implements Serializable {
                     info.setServiceId(serviceInfo.getServiceId());
                     saveList.add(info);
                 }else{
-                    playerTeammap.setsDareCount(playerTeammap.getsDareCount()+info.getsDareCount());
-                    playerTeammap.setsPassCount(playerTeammap.getsPassCount()+info.getsPassCount());
-                    playerTeammap.setdDareCount(playerTeammap.getdDareCount()+info.getdDareCount());
-                    playerTeammap.setdPassCount(playerTeammap.getdPassCount()+info.getdPassCount());
-                    playerTeammap.sethDareCount(playerTeammap.gethDareCount()+info.gethDareCount());
-                    playerTeammap.sethPassCount(playerTeammap.gethPassCount()+info.gethPassCount());
+                    playerTeammap.setSDareCount(playerTeammap.getSDareCount()+info.getSDareCount());
+                    playerTeammap.setSPassCount(playerTeammap.getSPassCount()+info.getSPassCount());
+                    playerTeammap.setDDareCount(playerTeammap.getDDareCount()+info.getDDareCount());
+                    playerTeammap.setDPassCount(playerTeammap.getDPassCount()+info.getDPassCount());
+                    playerTeammap.setHDareCount(playerTeammap.getHDareCount()+info.getHDareCount());
+                    playerTeammap.setHPassCount(playerTeammap.getHPassCount()+info.getHPassCount());
                     updateList.add(playerTeammap);
                 }
             }

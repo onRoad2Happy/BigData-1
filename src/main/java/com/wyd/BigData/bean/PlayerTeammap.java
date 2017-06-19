@@ -47,51 +47,51 @@ public class PlayerTeammap implements java.io.Serializable {
         this.sectionId = sectionId;
     }
 
-    public int getsDareCount() {
+    public int getSDareCount() {
         return sDareCount;
     }
 
-    public void setsDareCount(int sDareCount) {
+    public void setSDareCount(int sDareCount) {
         this.sDareCount = sDareCount;
     }
 
-    public int getsPassCount() {
+    public int getSPassCount() {
         return sPassCount;
     }
 
-    public void setsPassCount(int sPassCount) {
+    public void setSPassCount(int sPassCount) {
         this.sPassCount = sPassCount;
     }
 
-    public int getdDareCount() {
+    public int getDDareCount() {
         return dDareCount;
     }
 
-    public void setdDareCount(int dDareCount) {
+    public void setDDareCount(int dDareCount) {
         this.dDareCount = dDareCount;
     }
 
-    public int getdPassCount() {
+    public int getDPassCount() {
         return dPassCount;
     }
 
-    public void setdPassCount(int dPassCount) {
+    public void setDPassCount(int dPassCount) {
         this.dPassCount = dPassCount;
     }
 
-    public int gethDareCount() {
+    public int getHDareCount() {
         return hDareCount;
     }
 
-    public void sethDareCount(int hDareCount) {
+    public void setHDareCount(int hDareCount) {
         this.hDareCount = hDareCount;
     }
 
-    public int gethPassCount() {
+    public int getHPassCount() {
         return hPassCount;
     }
 
-    public void sethPassCount(int hPassCount) {
+    public void setHPassCount(int hPassCount) {
         this.hPassCount = hPassCount;
     }
 }

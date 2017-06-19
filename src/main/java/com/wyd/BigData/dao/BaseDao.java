@@ -120,14 +120,14 @@ public class BaseDao implements Serializable {
     public void updatePlayerTeammapBath(List<PlayerTeammap> teammapInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerTeammap info : teammapInfoList) {
-            paramsList.add(new Object[] {info.getsDareCount(),info.getsPassCount(),info.getdDareCount(),info.getdPassCount(),info.gethDareCount(),info.gethPassCount(), info.getId() });
+            paramsList.add(new Object[] {info.getSDareCount(),info.getSPassCount(),info.getDDareCount(),info.getDPassCount(),info.getHDareCount(),info.getHPassCount(), info.getId() });
         }
-        jdbcw.doBatch("update tab_player_teammap set `s_dare_count`=?,`s_pass_count`=?,`d_dare_count`=?,`d_pass_count`=?,`h_dare_count`=?,`h_pass_count`=? from tab_player_teammap  where id=?", paramsList);
+        jdbcw.doBatch("update tab_player_teammap set `s_dare_count`=?,`s_pass_count`=?,`d_dare_count`=?,`d_pass_count`=?,`h_dare_count`=?,`h_pass_count`=?  where id=?", paramsList);
     }
     public void savePlayerTeammapBatch(List<PlayerTeammap> teammapInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerTeammap info : teammapInfoList) {
-            paramsList.add(new Object[] {info.getServiceId(),info.getPlayerId(),info.getSectionId(),info.getsDareCount(),info.getsPassCount(),info.getdDareCount(),info.getdPassCount(),info.gethDareCount(),info.gethPassCount()});
+            paramsList.add(new Object[] {info.getServiceId(),info.getPlayerId(),info.getSectionId(),info.getSDareCount(),info.getSPassCount(),info.getDDareCount(),info.getDPassCount(),info.getHDareCount(),info.getHPassCount()});
         }
         jdbcw.doBatch("insert into tab_player_teammap (`service_id`,`player_id`,`section_id`,`s_dare_count`,`s_pass_count`,`d_dare_count`,`d_pass_count`,`h_dare_count`,`h_pass_count`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
@@ -140,12 +140,12 @@ public class BaseDao implements Serializable {
                     playerTeammap.setServiceId(rs.getInt(2));
                     playerTeammap.setPlayerId(rs.getInt(3));
                     playerTeammap.setSectionId(rs.getInt(4));
-                    playerTeammap.setsDareCount(rs.getInt(5));
-                    playerTeammap.setsPassCount(rs.getInt(6));
-                    playerTeammap.setdDareCount(rs.getInt(7));
-                    playerTeammap.setdPassCount(rs.getInt(8));
-                    playerTeammap.sethDareCount(rs.getInt(9));
-                    playerTeammap.sethPassCount(rs.getInt(10));
+                    playerTeammap.setSDareCount(rs.getInt(5));
+                    playerTeammap.setSPassCount(rs.getInt(6));
+                    playerTeammap.setDDareCount(rs.getInt(7));
+                    playerTeammap.setDPassCount(rs.getInt(8));
+                    playerTeammap.setHDareCount(rs.getInt(9));
+                    playerTeammap.setHPassCount(rs.getInt(10));
                 }
             }catch (Exception ex){
                 ex.printStackTrace();
@@ -163,6 +163,13 @@ public class BaseDao implements Serializable {
         }
         jdbcw.doBatch("update tab_teammap_info set `s_total_time`=?,`s_dare_count`=?,`s_pass_count`=?,`s_member1_count`=?,`s_member2_count`=?,`s_member3_count`=?,`d_total_time`=?,`d_dare_count`=?,`d_pass_count`=?,`d_member1_count`=?,`d_member2_count`=?,`d_member3_count`=?,`h_total_time`=?,`h_dare_count`=?,`h_pass_count`=?,`h_member1_count`=?,`h_member2_count`=?,`h_member3_count`=? where id=?", paramsList);
     }
+    public void updateTeammapInfoBath2(List<TeammapInfo> teammapInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (TeammapInfo info : teammapInfoList) {
+            paramsList.add(new Object[] {info.getSLotteryCount(),info.getDLotteryCount(),info.getHLotteryCount(),info.getSLotteryDeplete(),info.getDLotteryDeplete(),info.getHLotteryDeplete() , info.getId() });
+        }
+        jdbcw.doBatch("update tab_teammap_info set `s_lottery_count`=?,`d_lottery_count`=?,`h_lottery_count`=?,`s_lottery_deplete`=?,`d_lottery_deplete`=?,`h_lottery_deplete`=? where id=?", paramsList);
+    }
     public void saveTeammapInfoBatch(List<TeammapInfo> teammapInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (TeammapInfo info : teammapInfoList) {
@@ -170,6 +177,7 @@ public class BaseDao implements Serializable {
         }
         jdbcw.doBatch("insert into tab_teammap_info (`service_id`,`section_id`,`s_total_time`,`s_dare_count`,`s_pass_count`,`s_member1_count`,`s_member2_count`,`s_member3_count`,`s_lottery_count`,`s_lottery_deplete`,`d_total_time`,`d_dare_count`,`d_pass_count`,`d_member1_count`,`d_member2_count`,`d_member3_count`,`d_lottery_count`,`d_lottery_deplete`,`h_total_time`,`h_dare_count`,`h_pass_count`,`h_member1_count`,`h_member2_count`,`h_member3_count`,`h_lottery_count`,`h_lottery_deplete`,`reset_count`,`reset_deplete`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", paramsList);
     }
+
 
     public TeammapInfo getTeammapInfo(int serviceId,int sectionId) {
         TeammapInfo teammapInfo = new TeammapInfo();
