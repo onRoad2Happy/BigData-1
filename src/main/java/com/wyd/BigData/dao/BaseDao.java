@@ -176,6 +176,14 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("update tab_teammap_info set `s_lottery_count`=?,`d_lottery_count`=?,`h_lottery_count`=?,`s_lottery_deplete`=?,`d_lottery_deplete`=?,`h_lottery_deplete`=? where id=?", paramsList);
     }
 
+    public void updateTeammapInfoBath3(List<TeammapInfo> teammapInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (TeammapInfo info : teammapInfoList) {
+            paramsList.add(new Object[] { info.getResetCount(), info.getResetDeplete(), info.getId() });
+        }
+        jdbcw.doBatch("update tab_teammap_info set `reset_count`=?,`reset_deplete`=? where id=?", paramsList);
+    }
+
     public void saveTeammapInfoBatch(List<TeammapInfo> teammapInfoList) {
         List<Object[]> paramsList = new ArrayList<>();
         for (TeammapInfo info : teammapInfoList) {
@@ -627,6 +635,27 @@ public class BaseDao implements Serializable {
             saveAccountNewCountBatch(today, accountMap.get(today));
         }
     }
+    public void saveTeammapResetBatch(List<TeammapReset> teammapList) {
+        Map<String, List<TeammapReset>> teammapResetap = new HashMap<>();
+        for (TeammapReset teammap : teammapList) {
+            String today = sf.format(new Date(teammap.getDataTime()));
+            teammapResetap.computeIfAbsent(today, x -> new ArrayList<>()).add(teammap);
+        }
+        for (String today : teammapResetap.keySet()) {
+            saveTeammapRestBatch(today, teammapResetap.get(today));
+        }
+    }
+
+    private void saveTeammapRestBatch(String today, List<TeammapReset> accountList) {
+        createTeammapReset(today);
+        List<Object[]> paramsList = new ArrayList<>();
+        for (TeammapReset info : accountList) {
+            paramsList.add(new Object[] { info.getServiceId(), info.getSectionId(), info.getPlayerId(), info.getDeplete() });
+        }
+        String tableName = today + "tab_teammap_reset";
+        jdbcw.doBatch("insert into " + tableName + " (service_id,section_id,player_id,deplete) values (?,?,?,?)", paramsList);
+    }
+
     public void saveTeammapLotteryBatch(List<TeammapLottery> teammapList) {
         Map<String, List<TeammapLottery>> teammapLotteryMap = new HashMap<>();
         for (TeammapLottery teammap : teammapList) {
@@ -642,7 +671,7 @@ public class BaseDao implements Serializable {
         createTeammapLottery(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (TeammapLottery info : accountList) {
-            paramsList.add(new Object[] {info.getServiceId(), info.getSectionId(), info.getDifficulty(), info.getPlayerId(), info.getDeplete()});
+            paramsList.add(new Object[] { info.getServiceId(), info.getSectionId(), info.getDifficulty(), info.getPlayerId(), info.getDeplete() });
         }
         String tableName = today + "tab_teammap_lottery";
         jdbcw.doBatch("insert into " + tableName + " (service_id,section_id,difficulty,player_id,deplete) values (?,?,?,?,?)", paramsList);
@@ -651,7 +680,7 @@ public class BaseDao implements Serializable {
     public void saveTeammapItemBatch(List<TeammapItem> teammapList) {
         Map<String, List<TeammapItem>> teammapItemMap = new HashMap<>();
         for (TeammapItem teammap : teammapList) {
-            String today = sf.format(new Date(teammap.getStartTime()*1000L));
+            String today = sf.format(new Date(teammap.getStartTime() * 1000L));
             teammapItemMap.computeIfAbsent(today, x -> new ArrayList<>()).add(teammap);
         }
         for (String today : teammapItemMap.keySet()) {
@@ -663,7 +692,7 @@ public class BaseDao implements Serializable {
         createTeammapItem(today);
         List<Object[]> paramsList = new ArrayList<>();
         for (TeammapItem info : accountList) {
-            paramsList.add(new Object[] {info.getServiceId() , info.getPlayerId()  , info.getMapId(), info.getDifficulty(), info.getIsWin(),info.getStartTime(), info.getFinishTime(), info.getPlayerNum()});
+            paramsList.add(new Object[] { info.getServiceId(), info.getPlayerId(), info.getMapId(), info.getDifficulty(), info.getIsWin(), info.getStartTime(), info.getFinishTime(), info.getPlayerNum() });
         }
         String tableName = today + "tab_teammap_item";
         jdbcw.doBatch("insert into " + tableName + " (service_id,player_id,map_id,difficulty,is_win,start_time,finish_time,player_num) values (?,?,?,?,?,?,?,?)", paramsList);
@@ -1071,6 +1100,13 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("update tab_player_info set first_cost_time=?,first_cost_level=?,first_cost_num=?,first_cost_item=? where player_id=?", paramsList);
     }
 
+    public void updatePlayerTeammap(PlayerInfo playerInfo) {
+        List<Object[]> paramsList = new ArrayList<>();
+        paramsList.add(new Object[] { playerInfo.getTeammapNum(), playerInfo.getPlayerId() });
+        playerInfoMap.put(playerInfo.getPlayerId(), playerInfo);
+        jdbcw.doBatch("update tab_player_info set teammap_num=? where player_id=?", paramsList);
+    }
+
     public void updatePlayerGuildInfoBatch(List<PlayerInfo> playerInfoList) {
         if (playerInfoList.size() == 0)
             return;
@@ -1205,18 +1241,23 @@ public class BaseDao implements Serializable {
         jdbcw.executeSQL(createSql);
     }
 
+    private void createTeammapReset(String today) {
+        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_teammap_reset` (`id` bigint(20) NOT NULL AUTO_INCREMENT,`service_id` int(11) DEFAULT NULL,`section_id` int(11) DEFAULT NULL,`player_id` int(11) DEFAULT NULL,`deplete` int(11) DEFAULT NULL,PRIMARY KEY (`id`),KEY `service_id` (`service_id`),KEY `player_id` (`player_id`),KEY `section_id` (`section_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY;
+        jdbcw.executeSQL(createSql);
+    }
+
     private void createAccountNewCount(String today) {
-        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_account_new_count` (`id` bigint(20) NOT NULL AUTO_INCREMENT,`service_id` int(11) DEFAULT NULL,`channel_id` int(11) DEFAULT NULL,`account_id` int(11) DEFAULT NULL,`create_time` datetime DEFAULT NULL,PRIMARY KEY (`id`),KEY `anc_service_id` (`service_id`),KEY `anc_channel_id` (`channel_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_account_new_count` (`id` bigint(20) NOT NULL AUTO_INCREMENT,`service_id` int(11) DEFAULT NULL,`channel_id` int(11) DEFAULT NULL,`account_id` int(11) DEFAULT NULL,`create_time` datetime DEFAULT NULL,PRIMARY KEY (`id`),KEY `anc_service_id` (`service_id`),KEY `anc_channel_id` (`channel_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY;
         jdbcw.executeSQL(createSql);
     }
 
     private void createPlayerNewCount(String today) {
-        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_player_new_count` (`id` bigint(20) NOT NULL AUTO_INCREMENT,`service_id` int(11) DEFAULT NULL,`channel_id` int(11) DEFAULT NULL,`player_id` int(11) DEFAULT NULL,`create_time` datetime DEFAULT NULL,PRIMARY KEY (`id`),KEY `pnc_service_id` (`service_id`),KEY `pnc_channel_id` (`channel_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_player_new_count` (`id` bigint(20) NOT NULL AUTO_INCREMENT,`service_id` int(11) DEFAULT NULL,`channel_id` int(11) DEFAULT NULL,`player_id` int(11) DEFAULT NULL,`create_time` datetime DEFAULT NULL,PRIMARY KEY (`id`),KEY `pnc_service_id` (`service_id`),KEY `pnc_channel_id` (`channel_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY ;
         jdbcw.executeSQL(createSql);
     }
 
     private void createDeviceNewCount(String today) {
-        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_device_new_count` (`id` bigint(20) NOT NULL AUTO_INCREMENT,`service_id` int(11) DEFAULT NULL,`channel_id` int(11) DEFAULT NULL,`device_mac` varchar(255) DEFAULT NULL,`create_time` datetime DEFAULT NULL,PRIMARY KEY (`id`),KEY `dnc_service_id` (`service_id`),KEY `dnc_channel_id` (`channel_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY + ";";//
+        String createSql = "CREATE TABLE IF NOT EXISTS `" + today + "_tab_device_new_count` (`id` bigint(20) NOT NULL AUTO_INCREMENT,`service_id` int(11) DEFAULT NULL,`channel_id` int(11) DEFAULT NULL,`device_mac` varchar(255) DEFAULT NULL,`create_time` datetime DEFAULT NULL,PRIMARY KEY (`id`),KEY `dnc_service_id` (`service_id`),KEY `dnc_channel_id` (`channel_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8" + TAB_DIRECTORY ;
         jdbcw.executeSQL(createSql);
     }
 

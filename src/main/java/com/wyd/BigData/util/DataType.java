@@ -46,9 +46,9 @@ public class DataType {
     /** 标识号-挑战组队副本 */
     public static final int MARKNUM_DARETEAMMAP    = 20;
     /** 标识号-组队副本钻石翻牌 */
-    public static final int MARKNUM_TEAMMAPLOTTERY = 21;
+    public static final int MARKNUM_TEAMMAPLOTTERY = 21;//合并到MARKNUM_TEAMMAPLOTTERY_ITEM
     /** 标识号-组队副本重置 */
-    public static final int MARKNUM_TEAMMAPRESET   = 22;
+    public static final int MARKNUM_TEAMMAPRESET   = 22;// 合并到MARKNUM_TEAMMAPRESET_ITEM
     /** 标识号-竞技场日志 */
     public static final int MARKNUM_BATTLELOG      = 23;
     /** 标识号-玩家聊天日志 */

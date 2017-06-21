@@ -179,7 +179,7 @@ public class DareTeammapRDD implements Serializable {
                 int pileTime = Integer.parseInt(datas[4]);
                 long dataTime = Long.parseLong(datas[5]);
                 int playerSize = Integer.parseInt(datas[6]);
-                PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+                PlayerInfo playerInfo = dao.getPlayerInfo(playerId,false);
                 if (playerInfo == null)
                     continue;
                 DareMapInfo dareMapInfo = new DareMapInfo();
@@ -205,6 +205,7 @@ public class DareTeammapRDD implements Serializable {
                 item.setIsWin(isWin);
                 teammapItemList.add(item);
                 playerInfo.setTeammapNum(playerInfo.getTeammapNum() + 1);
+                dao.updatePlayerTeammap(playerInfo);
             }
             dao.saveTeammapItemBatch(teammapItemList);
             dao.saveDareMapInfoBatch(dareMapInfoList);
