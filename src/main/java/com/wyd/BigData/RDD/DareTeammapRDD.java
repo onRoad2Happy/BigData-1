@@ -1,9 +1,8 @@
 package com.wyd.BigData.RDD;
-import com.wyd.BigData.bean.PlayerTeammap;
-import com.wyd.BigData.bean.ServiceInfo;
-import com.wyd.BigData.bean.TeammapInfo;
+import com.wyd.BigData.bean.*;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.DataType;
+import kafka.controller.LeaderIsrAndControllerEpoch;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
@@ -152,23 +151,69 @@ public class DareTeammapRDD implements Serializable {
             dao.updateTeammapInfoBath(updatelist);
         });
         //按玩家拆分数据.如把a 1,2拆成a 1和a 2
-        //格式playerId sectionId difficulty isWin
+        //格式playerId sectionId difficulty isWin pileTime dataTime playerSize
         JavaRDD<String[]> playerTeammapRDD = dareTeammapRDD.flatMap(datas -> {
+            String dataTime = datas[1];
             String sectionId = datas[2];
             String difficulty = datas[3];
             String isWin = datas[4];
             String[] playerIds = datas[5].split(",");
+            String pileTime = datas[6];
             List<String[]> list = new ArrayList<>();
             for (String playerId : playerIds) {
-                list.add(new String[] { playerId, sectionId, difficulty, isWin });
+                list.add(new String[] { playerId, sectionId, difficulty, isWin, pileTime, dataTime, String.valueOf(playerIds.length) });
             }
             return list.iterator();
         });
+        //保存玩家战斗数据
+        playerTeammapRDD.foreachPartition(it -> {
+            BaseDao dao = BaseDao.getInstance();
+            List<DareMapInfo> dareMapInfoList = new ArrayList<>();
+            List<TeammapItem> teammapItemList = new ArrayList<>();
+            while (it.hasNext()) {
+                String[] datas = it.next();
+                int playerId = Integer.parseInt(datas[0]);
+                int sectionId = Integer.parseInt(datas[1]);
+                int difficulty = Integer.parseInt(datas[2]);
+                int isWin = Integer.parseInt(datas[3]);
+                int pileTime = Integer.parseInt(datas[4]);
+                long dataTime = Long.parseLong(datas[5]);
+                int playerSize = Integer.parseInt(datas[6]);
+                PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+                if (playerInfo == null)
+                    continue;
+                DareMapInfo dareMapInfo = new DareMapInfo();
+                dareMapInfo.setAction(isWin == 1 ? DareMapInfo.COME_OUT : DareMapInfo.COME_IN);
+                dareMapInfo.setMapId(sectionId);
+                dareMapInfo.setPlayerId(playerId);
+                dareMapInfo.setDifficult(difficulty);
+                dareMapInfo.setServiceId(playerInfo.getServiceId());
+                dareMapInfo.setTime(1);
+                dareMapInfo.setRecordTime((int) (dataTime / 1000));
+                dareMapInfo.setType(DareMapInfo.TEAM_MAP);
+                dareMapInfo.setAccountId(playerInfo.getAccountId());
+                dareMapInfo.setChallengeType(0);
+                dareMapInfoList.add(dareMapInfo);
+                TeammapItem item = new TeammapItem();
+                item.setServiceId(playerInfo.getServiceId());
+                item.setPlayerId(playerId);
+                item.setPlayerNum(playerSize);
+                item.setMapId(sectionId);
+                item.setDifficulty(difficulty);
+                item.setStartTime((int) (dataTime / 1000));
+                item.setFinishTime(pileTime);
+                item.setIsWin(isWin);
+                teammapItemList.add(item);
+                playerInfo.setTeammapNum(playerInfo.getTeammapNum() + 1);
+            }
+            dao.saveTeammapItemBatch(teammapItemList);
+            dao.saveDareMapInfoBatch(dareMapInfoList);
+        });
         //KEY:playerId_sectionId VAL:PlayerTeammap
-        JavaPairRDD<String,PlayerTeammap> playerTeammapCounts=playerTeammapRDD.mapToPair(datas -> {
+        JavaPairRDD<String, PlayerTeammap> playerTeammapCounts = playerTeammapRDD.mapToPair(datas -> {
             PlayerTeammap playerTeammap = new PlayerTeammap();
             String playerId = datas[0];
-            String sectionId =datas[1];
+            String sectionId = datas[1];
             int difficulty = Integer.parseInt(datas[2]);
             int isWin = Integer.parseInt(datas[3]);
             switch (difficulty) {
@@ -191,49 +236,48 @@ public class DareTeammapRDD implements Serializable {
                 }
                 break;
             }
-            String key = playerId+ "_" +sectionId;
+            String key = playerId + "_" + sectionId;
             return new Tuple2<>(key, playerTeammap);
         }).reduceByKey((x, y) -> {
             PlayerTeammap playerTeammap = new PlayerTeammap();
-            playerTeammap.setSDareCount(x.getSDareCount()+y.getSDareCount());
-            playerTeammap.setSPassCount(x.getSPassCount()+y.getSPassCount());
-            playerTeammap.setDDareCount(x.getDDareCount()+y.getDDareCount());
-            playerTeammap.setDPassCount(x.getDPassCount()+y.getDPassCount());
-            playerTeammap.setHDareCount(x.getHDareCount()+y.getHDareCount());
-            playerTeammap.setHPassCount(x.getHPassCount()+y.getHPassCount());
+            playerTeammap.setSDareCount(x.getSDareCount() + y.getSDareCount());
+            playerTeammap.setSPassCount(x.getSPassCount() + y.getSPassCount());
+            playerTeammap.setDDareCount(x.getDDareCount() + y.getDDareCount());
+            playerTeammap.setDPassCount(x.getDPassCount() + y.getDPassCount());
+            playerTeammap.setHDareCount(x.getHDareCount() + y.getHDareCount());
+            playerTeammap.setHPassCount(x.getHPassCount() + y.getHPassCount());
             return playerTeammap;
         });
-        playerTeammapCounts.foreachPartition(it->{
+        playerTeammapCounts.foreachPartition(it -> {
             BaseDao dao = BaseDao.getInstance();
             List<PlayerTeammap> saveList = new ArrayList<>();
             List<PlayerTeammap> updateList = new ArrayList<>();
-            while (it.hasNext()){
-                Tuple2<String,PlayerTeammap> t=it.next();
-                String [] params= t._1().split("_");
+            while (it.hasNext()) {
+                Tuple2<String, PlayerTeammap> t = it.next();
+                String[] params = t._1().split("_");
                 PlayerTeammap info = t._2();
-                int serviceId=-1;
-                int playerId= Integer.parseInt(params[0]);
-                int sectionId= Integer.parseInt(params[1]);
-                PlayerTeammap playerTeammap =  dao.getPlayerTeammap(playerId,sectionId);
-                if(playerTeammap==null){
+                int serviceId = -1;
+                int playerId = Integer.parseInt(params[0]);
+                int sectionId = Integer.parseInt(params[1]);
+                PlayerTeammap playerTeammap = dao.getPlayerTeammap(playerId, sectionId);
+                if (playerTeammap == null) {
                     info.setPlayerId(playerId);
                     info.setSectionId(sectionId);
                     ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
                     info.setServiceId(serviceInfo.getServiceId());
                     saveList.add(info);
-                }else{
-                    playerTeammap.setSDareCount(playerTeammap.getSDareCount()+info.getSDareCount());
-                    playerTeammap.setSPassCount(playerTeammap.getSPassCount()+info.getSPassCount());
-                    playerTeammap.setDDareCount(playerTeammap.getDDareCount()+info.getDDareCount());
-                    playerTeammap.setDPassCount(playerTeammap.getDPassCount()+info.getDPassCount());
-                    playerTeammap.setHDareCount(playerTeammap.getHDareCount()+info.getHDareCount());
-                    playerTeammap.setHPassCount(playerTeammap.getHPassCount()+info.getHPassCount());
+                } else {
+                    playerTeammap.setSDareCount(playerTeammap.getSDareCount() + info.getSDareCount());
+                    playerTeammap.setSPassCount(playerTeammap.getSPassCount() + info.getSPassCount());
+                    playerTeammap.setDDareCount(playerTeammap.getDDareCount() + info.getDDareCount());
+                    playerTeammap.setDPassCount(playerTeammap.getDPassCount() + info.getDPassCount());
+                    playerTeammap.setHDareCount(playerTeammap.getHDareCount() + info.getHDareCount());
+                    playerTeammap.setHPassCount(playerTeammap.getHPassCount() + info.getHPassCount());
                     updateList.add(playerTeammap);
                 }
             }
             dao.savePlayerTeammapBatch(saveList);
             dao.updatePlayerTeammapBath(updateList);
-
         });
     }
 }

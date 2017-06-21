@@ -74,6 +74,11 @@ public class App {
             new MopSingleMapRDD().call(strsRDD);
             // 物品流水
             new ItemLogRDD().call(strsRDD);
+            // 通关组队副本
+            new DareTeammapRDD().call(strsRDD);
+            // 组队副本翻牌
+            new TeammapLotteryRDD().call(strsRDD);
+
             
         });
         ssc.start();
