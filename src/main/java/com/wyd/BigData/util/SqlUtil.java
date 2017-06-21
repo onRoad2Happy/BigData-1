@@ -86,6 +86,6 @@ public class SqlUtil {
     }
 
     public static void main(String[] args) {
-        SqlUtil.getSQLStr("tab_player_teammap","test");
+        SqlUtil.getSQLStr("tab_battle_info","test");
     }
 }

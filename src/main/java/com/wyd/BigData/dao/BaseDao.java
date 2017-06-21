@@ -972,7 +972,48 @@ public class BaseDao implements Serializable {
         String tableName = "tab_account_info";
         jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
+    public void updateBattleInfoBatch(List<BattleInfo> battleInfoList){
+        List<Object[]> paramsList = new ArrayList<>();
+        for (BattleInfo info : battleInfoList) {
+            paramsList.add(new Object[] { info.getTotalTime(),info.getBattleCount(), info.getId() });
+        }
+        jdbcw.doBatch("update tab_battle_info set total_time=?,battle_count=? where id=?", paramsList);
+    }
+    public BattleInfo getBattleInfo(int serviceId,int battleMode, int battleChannel, boolean isBattleMull, boolean isRobot, int playerNum){
+        String sql ="select `id`,`service_id`,`create_time`,`battle_mode`,`battle_channel`,`is_battle_mull`,`is_robot`,`player_num`,`total_time`,`battle_count` from tab_battle_info";
+        sql += " where `service_id`=? and `battle_mode`=? and `battle_channel`=? and `is_battle_mull`=? and `is_robot`=? and `player_num`=? ";
+        BattleInfo battleInfo = new BattleInfo();
+        jdbcw.doQuery(sql,new Object[]{serviceId, battleMode,  battleChannel,  isBattleMull,  isRobot,  playerNum},rs->{
+            try {
+                while (rs.next()){
+                    battleInfo.setId(rs.getInt(1));
+                    battleInfo.setServiceId(rs.getInt(2));
+                    battleInfo.setCreateTime(rs.getDate(3));
+                    battleInfo.setBattleMode(rs.getInt(4));
+                    battleInfo.setBattleChannel(rs.getInt(5));
+                    battleInfo.setBattleMull(rs.getBoolean(6));
+                    battleInfo.setRobot(rs.getBoolean(7));
+                    battleInfo.setPlayerNum(rs.getInt(8));
+                    battleInfo.setTotalTime(rs.getInt(9));
+                    battleInfo.setBattleCount(rs.getInt(10));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        if(battleInfo.getId()!=0){
+            return battleInfo;
+        }
+        return null;
+    }
+    public void saveBattleInfoBatch(List<BattleInfo> battleInfoList) {
+        List<Object[]> paramsList = new ArrayList<>();
+        for (BattleInfo info : battleInfoList) {
+            paramsList.add(new Object[] {info.getServiceId(),info.getCreateTime(),info.getBattleMode(),info.getBattleChannel(),info.isBattleMull(),info.isRobot(),info.getPlayerNum(),info.getTotalTime(),info.getBattleCount()});
+        }
 
+        jdbcw.doBatch("insert into tab_battle_info (`service_id`,`create_time`,`battle_mode`,`battle_channel`,`is_battle_mull`,`is_robot`,`player_num`,`total_time`,`battle_count`) values (?,?,?,?,?,?,?,?,?)", paramsList);
+    }
     public void saveUpgradeInfo(UpgradeInfo info) {
         List<Object[]> paramsList = new ArrayList<>();
         paramsList.add(new Object[] { info.getServiceId(), info.getPlayerLevel(), info.getTotalTime(), info.getTotalCount() });
