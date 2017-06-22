@@ -75,8 +75,6 @@ public class DataType {
     public static final int MARKNUM_MOUNTSADVANCE  = 34;
     /** 标识号-武器洗练 */
     public static final int MARKNUM_WASH  = 35;
-    /** 标识号-竞技商店 */
-    //    public static final int MARKNUM_WICTORY_STORE  = 36;
     /** 标识号-竞技赛段位升级 */
     public static final int MARKNUM_ARENA_UPGRADE  = 36;
     /** 标识号-意见箱意见回复 */
@@ -102,7 +100,7 @@ public class DataType {
     /** 标识号-完成公会任务 */
     public static final int MARKNUM_GUILD_TASK_FINISH	= 47;
     /** 爬塔副本开始挑战 */
-    public static final int MARKNUM_TOWER_START		= 50;
+    public static final int MARKNUM_TOWER_START		    = 50;
     /** 爬塔副本完成挑战 */
     public static final int MARKNUM_TOWER_FINISH		= 51;
     /** 秘境宝藏开始挑战 */

@@ -78,6 +78,7 @@ public class App {
             new DareTeammapRDD().call(strsRDD);
             // 组队副本翻牌
             new TeammapLotteryRDD().call(strsRDD);
+            // 聊天记录
 
             
         });
