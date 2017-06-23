@@ -38,7 +38,7 @@ public class ItemLogRDD implements Serializable {
             int mainType = Integer.parseInt(datas[7]);
             int subType = Integer.parseInt(datas[8]);
             int useType = Integer.parseInt(datas[9]);
-            int getItemId = datas[10] != null && !datas[10].toString().equals("") && StringUtil.isNumeric(datas[10]) ? Integer.parseInt(datas[10]) : -1;
+            int getItemId = datas[10] != null && !datas[10].equals("") && StringUtil.isNumeric(datas[10]) ? Integer.parseInt(datas[10]) : -1;
             String name = datas[11];
             int accountId = 0;
             int beforeNum = 0;
@@ -94,7 +94,7 @@ public class ItemLogRDD implements Serializable {
                 int playerId = Integer.parseInt(params[0]);
                 String itemId = params[1];
                 PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
-                if (null == playerInfo) {
+                if (null != playerInfo) {
                     if (itemId.equals("1")) {
                         playerInfo.setDiamond(playerInfo.getDiamond() + count);
                         diamondInfoList.add(playerInfo);
@@ -103,14 +103,13 @@ public class ItemLogRDD implements Serializable {
                         goldInfoList.add(playerInfo);
                     }
                 }
-                dao.updatePlayerGoldInfoBatch(goldInfoList);
-                dao.updatePlayerDiamondInfoBatch(diamondInfoList);
             }
+            dao.updatePlayerGoldInfoBatch(goldInfoList);
+            dao.updatePlayerDiamondInfoBatch(diamondInfoList);
         });
         //update first cost info
         itemRDD.foreachPartition(it -> {
             BaseDao dao = BaseDao.getInstance();
-            List<PlayerInfo> playerInfoList = new ArrayList<>();
             while (it.hasNext()) {
                 String[] datas = it.next();
                 String itemId = datas[3];
@@ -122,7 +121,7 @@ public class ItemLogRDD implements Serializable {
                         if (playerInfo.getFirstCostTime() == null) {
                             long dataTime = Long.valueOf(datas[1]);
                             int changeNum = Integer.parseInt(datas[6]);
-                            int getItemId = datas[10] != null && !datas[10].toString().equals("") && StringUtil.isNumeric(datas[10]) ? Integer.parseInt(datas[10]) : -1;
+                            int getItemId = datas[10] != null && !datas[10].equals("") && StringUtil.isNumeric(datas[10]) ? Integer.parseInt(datas[10]) : -1;
                             playerInfo.setFirstCostTime(new Date(dataTime));
                             playerInfo.setFirstCostLevel(playerInfo.getPlayerLevel());
                             playerInfo.setFirstCostNum(changeNum);

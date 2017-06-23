@@ -1,6 +1,7 @@
 package com.wyd.BigData.RDD;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
-import com.wyd.BigData.bean.*;
+import com.wyd.BigData.bean.ServiceInfo;
+import com.wyd.BigData.bean.TeammapInfo;
+import com.wyd.BigData.bean.TeammapReset;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.DataType;
 import org.apache.spark.api.java.JavaPairRDD;

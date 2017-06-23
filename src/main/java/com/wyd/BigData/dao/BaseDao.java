@@ -379,6 +379,7 @@ public class BaseDao implements Serializable {
 
     public ServiceInfo getServiceInfo(int playerId) {
         PlayerInfo playerInfo = getPlayerInfo(playerId, true);
+        if(playerInfo==null)return new ServiceInfo(-1,-1,-1);
         return new ServiceInfo(playerInfo.getServiceId(), playerInfo.getChannelId(), playerInfo.getAccountId());
     }
 
@@ -587,8 +588,8 @@ public class BaseDao implements Serializable {
         for (DeviceInfo info : accountList) {
             paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getDeviceMac(), info.getCreateTime(), info.getDeviceName(), info.getSystemName(), info.getSystemVersion(), info.getAppVersion() });
         }
-        String tableName = "tab_device_info";
-        jdbcw.doBatch("insert into " + tableName + " (`service_id` ,`channel_id`,`device_mac`,`create_time`, `device_name`,`system_name`,`system_version`,`app_version`) values (?,?,?,?,?,?,?,?)", paramsList);
+
+        jdbcw.doBatch("insert into tab_device_info (`service_id` ,`channel_id`,`device_mac`,`create_time`, `device_name`,`system_name`,`system_version`,`app_version`) values (?,?,?,?,?,?,?,?)", paramsList);
     }
 
     public List<LoginSumInfo> getAllLoginSumInfo(String today) {
@@ -652,7 +653,7 @@ public class BaseDao implements Serializable {
         for (TeammapReset info : accountList) {
             paramsList.add(new Object[] { info.getServiceId(), info.getSectionId(), info.getPlayerId(), info.getDeplete() });
         }
-        String tableName = today + "tab_teammap_reset";
+        String tableName = today + "_tab_teammap_reset";
         jdbcw.doBatch("insert into " + tableName + " (service_id,section_id,player_id,deplete) values (?,?,?,?)", paramsList);
     }
 
@@ -673,7 +674,7 @@ public class BaseDao implements Serializable {
         for (TeammapLottery info : accountList) {
             paramsList.add(new Object[] { info.getServiceId(), info.getSectionId(), info.getDifficulty(), info.getPlayerId(), info.getDeplete() });
         }
-        String tableName = today + "tab_teammap_lottery";
+        String tableName = today + "_tab_teammap_lottery";
         jdbcw.doBatch("insert into " + tableName + " (service_id,section_id,difficulty,player_id,deplete) values (?,?,?,?,?)", paramsList);
     }
 
@@ -694,7 +695,7 @@ public class BaseDao implements Serializable {
         for (TeammapItem info : accountList) {
             paramsList.add(new Object[] { info.getServiceId(), info.getPlayerId(), info.getMapId(), info.getDifficulty(), info.getIsWin(), info.getStartTime(), info.getFinishTime(), info.getPlayerNum() });
         }
-        String tableName = today + "tab_teammap_item";
+        String tableName = today + "_tab_teammap_item";
         jdbcw.doBatch("insert into " + tableName + " (service_id,player_id,map_id,difficulty,is_win,start_time,finish_time,player_num) values (?,?,?,?,?,?,?,?)", paramsList);
     }
 
@@ -969,8 +970,8 @@ public class BaseDao implements Serializable {
         for (AccountInfo info : accountList) {
             paramsList.add(new Object[] { info.getAccountId(), info.getServiceId(), info.getChannelId(), info.getAccountName(), info.getAccountPwd(), info.getCreateTime(), info.getDeviceMac(), info.getSystemVersion(), info.getSystemType() });
         }
-        String tableName = "tab_account_info";
-        jdbcw.doBatch("insert into " + tableName + " (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
+
+        jdbcw.doBatch("insert into tab_account_info (`account_id`,`service_id`,`channel_id`,`account_name`,`account_pwd`,`create_time`,`device_mac`,`system_version`,`system_type`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
     public void updateBattleInfoBatch(List<BattleInfo> battleInfoList){
         List<Object[]> paramsList = new ArrayList<>();
@@ -1035,11 +1036,11 @@ public class BaseDao implements Serializable {
         for (LoginInfo info : loginInfoList) {
             String today = sf.format(info.getLoginTime());
             List<Object[]> paramsList = dayParamMap.computeIfAbsent(today, x -> new ArrayList<>());
-            paramsList.add(new Object[] { info.getLogoutTime(), info.getOnlineTime(), info.getPlayerLevel(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getLogoutTime(), info.getOnlineTime(), info.getPlayerLevel(), info.getId() });
             loginInfoMap.put(info.getPlayerId(), info);
         }
         for (String today : dayParamMap.keySet()) {
-            jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where player_id=? and logout_time is null", dayParamMap.get(today));
+            jdbcw.doBatch("update " + today + "_tab_login_info set logout_time=?,online_time=?,player_level=?  where id=? and logout_time is null", dayParamMap.get(today));
         }
     }
 
@@ -1095,10 +1096,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getLoginTime(), info.getLoginNum(), info.getDiamond(), info.getGold(), info.getVigor(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set login_time=?,login_num=?,diamond=?,gold=?,vigor=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set login_time=?,login_num=?,diamond=?,gold=?,vigor=? where id=?", paramsList);
     }
 
     public void updateTotalOnlineBatch(List<PlayerInfo> playerInfoList) {
@@ -1106,10 +1107,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getTotalOnline(), info.getVigor(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getTotalOnline(), info.getVigor(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set total_online=?,vigor=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set total_online=?,vigor=? where id=?", paramsList);
     }
 
     public void updatePlayerDiamondInfoBatch(List<PlayerInfo> playerInfoList) {
@@ -1117,10 +1118,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getDiamond(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getDiamond(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set diamond=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set diamond=? where id=?", paramsList);
     }
 
     public void updatePlayerGoldInfoBatch(List<PlayerInfo> playerInfoList) {
@@ -1128,24 +1129,24 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getGold(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getGold(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set gold=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set gold=? where id=?", paramsList);
     }
 
     public void updatePlayerFirstCostInfo(PlayerInfo playerInfo) {
         List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { playerInfo.getFirstCostTime(), playerInfo.getFirstCostLevel(), playerInfo.getFirstCostNum(), playerInfo.getFirstCostItem(), playerInfo.getPlayerId() });
+        paramsList.add(new Object[] { playerInfo.getFirstCostTime(), playerInfo.getFirstCostLevel(), playerInfo.getFirstCostNum(), playerInfo.getFirstCostItem(), playerInfo.getId() });
         playerInfoMap.put(playerInfo.getPlayerId(), playerInfo);
-        jdbcw.doBatch("update tab_player_info set first_cost_time=?,first_cost_level=?,first_cost_num=?,first_cost_item=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set first_cost_time=?,first_cost_level=?,first_cost_num=?,first_cost_item=? where id=?", paramsList);
     }
 
     public void updatePlayerTeammap(PlayerInfo playerInfo) {
         List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { playerInfo.getTeammapNum(), playerInfo.getPlayerId() });
+        paramsList.add(new Object[] { playerInfo.getTeammapNum(), playerInfo.getId() });
         playerInfoMap.put(playerInfo.getPlayerId(), playerInfo);
-        jdbcw.doBatch("update tab_player_info set teammap_num=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set teammap_num=? where id=?", paramsList);
     }
 
     public void updatePlayerGuildInfoBatch(List<PlayerInfo> playerInfoList) {
@@ -1153,10 +1154,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getGuildId(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getGuildId(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set guild_id=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set guild_id=? where id=?", paramsList);
     }
 
     public void updatePlayerTopEliteSinglemapBatch(List<PlayerInfo> playerInfoList) {
@@ -1164,10 +1165,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getTopEliteSinglemap(), info.getTopEliteSinglemapTime(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getTopEliteSinglemap(), info.getTopEliteSinglemapTime(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set top_elite_singlemap=?,top_elite_singlemap_time=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set top_elite_singlemap=?,top_elite_singlemap_time=? where id=?", paramsList);
     }
 
     public void updatePlayerTopSinglemapBatch(List<PlayerInfo> playerInfoList) {
@@ -1175,10 +1176,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getTopSinglemap(), info.getTopSinglemapTime(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getTopSinglemap(), info.getTopSinglemapTime(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set top_singlemap=?,top_singlemap_time=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set top_singlemap=?,top_singlemap_time=? where id=?", paramsList);
     }
 
     public void updatePlayerMarryInfoBatch(List<PlayerInfo> playerInfoList) {
@@ -1186,10 +1187,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getMateId(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getMateId(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set mate_id=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set mate_id=? where id=?", paramsList);
     }
 
     public void updatePlayerTopDareSinglemapBatch(List<PlayerInfo> playerInfoList) {
@@ -1197,10 +1198,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getTopDareSinglemap(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getTopDareSinglemap(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set top_dare_singlemap=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set top_dare_singlemap=? where id=?", paramsList);
     }
 
     public void updatePlayerTopDareEliteSinglemapBatch(List<PlayerInfo> playerInfoList) {
@@ -1208,10 +1209,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getTopDareEliteSinglemap(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getTopDareEliteSinglemap(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set top_dare_elite_singlemap=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set top_dare_elite_singlemap=? where id=?", paramsList);
     }
 
     public void updateRechargeBatch(List<PlayerInfo> playerInfoList) {
@@ -1219,10 +1220,10 @@ public class BaseDao implements Serializable {
             return;
         List<Object[]> paramsList = new ArrayList<>();
         for (PlayerInfo info : playerInfoList) {
-            paramsList.add(new Object[] { info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getPlayerId() });
+            paramsList.add(new Object[] { info.getFirstChannel(), info.getFirstMoney(), info.getFirstRecharge(), info.getFirstLevel(), info.getTotalMoney(), info.getRechargeNum(), info.getWltv(), info.getMltv(), info.getId() });
             playerInfoMap.put(info.getPlayerId(), info);
         }
-        jdbcw.doBatch("update tab_player_info set first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where player_id=?", paramsList);
+        jdbcw.doBatch("update tab_player_info set first_channel=?,first_money=?,first_recharge=?,first_level=?,total_money=?,recharge_num=?,wltv=?,mltv=? where id=?", paramsList);
     }
 
     public void updateUpgradeInfoBatch(List<UpgradeInfo> upgradeInfoList) {
