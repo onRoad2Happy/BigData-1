@@ -24,33 +24,31 @@ public class LogoutRDD implements Serializable {
         if (logoutRDD.count() == 0)
             return;
         //LogLog.debug("logoutRDD count:" + logoutRDD.count());
-        logoutRDD.foreachPartition(t -> {
-            BaseDao dao = BaseDao.getInstance();
-            List<PlayerInfo> playerInfoList = new ArrayList<>();
-            List<LoginInfo> loginInfoList = new ArrayList<>();
-            while (t.hasNext()) {
-                String[] datas = t.next();
-                Date dataTime = new Date(Long.parseLong(datas[1]));
-                int playerId = Integer.parseInt(datas[2]);
-                PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
-                if (null != playerInfo) {
-                    String lastLoginDay = sf.format(playerInfo.getLoginTime());
-                    LoginInfo loginInfo = dao.getLoginInfo(lastLoginDay, playerId);
-                    if (null != loginInfo) {
-                        loginInfo.setLogoutTime(dataTime);
-                        loginInfo.setOnlineTime((int) (Long.parseLong(datas[3]) / 1000));
-                        loginInfo.setPlayerLevel(playerInfo.getPlayerLevel());
-                        playerInfo.setTotalOnline(playerInfo.getTotalOnline() + loginInfo.getOnlineTime());
-                        if (datas.length > 4) {
-                            playerInfo.setVigor(Integer.parseInt(datas[4]));
-                        }
-                        playerInfoList.add(playerInfo);
-                        loginInfoList.add(loginInfo);
+        List<String[]> logoutList = logoutRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        List<PlayerInfo> playerInfoList = new ArrayList<>();
+        List<LoginInfo> loginInfoList = new ArrayList<>();
+        for (String[] datas : logoutList) {
+            Date dataTime = new Date(Long.parseLong(datas[1]));
+            int playerId = Integer.parseInt(datas[2]);
+            PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+            if (null != playerInfo) {
+                String lastLoginDay = sf.format(playerInfo.getLoginTime());
+                LoginInfo loginInfo = dao.getLoginInfo(lastLoginDay, playerId);
+                if (null != loginInfo) {
+                    loginInfo.setLogoutTime(dataTime);
+                    loginInfo.setOnlineTime((int) (Long.parseLong(datas[3]) / 1000));
+                    loginInfo.setPlayerLevel(playerInfo.getPlayerLevel());
+                    playerInfo.setTotalOnline(playerInfo.getTotalOnline() + loginInfo.getOnlineTime());
+                    if (datas.length > 4) {
+                        playerInfo.setVigor(Integer.parseInt(datas[4]));
                     }
+                    playerInfoList.add(playerInfo);
+                    loginInfoList.add(loginInfo);
                 }
             }
-            dao.updateTotalOnlineBatch(playerInfoList);
-            dao.updateLoginInfoBatch(loginInfoList);
-        });
+        }
+        dao.updateTotalOnlineBatch(playerInfoList);
+        dao.updateLoginInfoBatch(loginInfoList);
     }
 }

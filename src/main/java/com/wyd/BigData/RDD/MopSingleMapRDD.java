@@ -55,34 +55,32 @@ public class MopSingleMapRDD implements Serializable {
             dao.updateSinglemapDareCountBatch(singlemapInfoList);
             dao.updateSinglemapPassCountBatch(singlemapInfoList);
         });
-        mopsingleRDD.foreachPartition(it -> {
-            BaseDao dao = BaseDao.getInstance();
-            List<DareMapInfo> dareMapInfoList = new ArrayList<>();
-            while (it.hasNext()) {
-                String[] datas = it.next();
-                long dataTime = Long.parseLong(datas[1]);
-                int playerId = Integer.parseInt(datas[2]);
-                int mapId = Integer.parseInt(datas[3]);
-                int challengeTimes = Integer.parseInt(datas[4]);// 挑战次数
-                int serviceId = -1, accountId = -1;
-                ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
-                if (serviceInfo != null) {
-                    serviceId = serviceInfo.getServiceId();
-                    accountId = serviceInfo.getAccountId();
-                }
-                DareMapInfo dareMapInfo = new DareMapInfo();
-                dareMapInfo.setMapId(mapId);
-                dareMapInfo.setPlayerId(playerId);
-                dareMapInfo.setServiceId(serviceId);
-                dareMapInfo.setTime(challengeTimes);
-                dareMapInfo.setRecordTime((int) (dataTime / 1000));
-                dareMapInfo.setAction(DareMapInfo.COME_OUT);
-                dareMapInfo.setType(DareMapInfo.SINGLE_MAP);
-                dareMapInfo.setAccountId(accountId);
-                dareMapInfo.setChallengeType(1);
-                dareMapInfoList.add(dareMapInfo);
+        List<String[]> mopsingleLogList = mopsingleRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        List<DareMapInfo> dareMapInfoList = new ArrayList<>();
+        for (String[] datas : mopsingleLogList) {
+            long dataTime = Long.parseLong(datas[1]);
+            int playerId = Integer.parseInt(datas[2]);
+            int mapId = Integer.parseInt(datas[3]);
+            int challengeTimes = Integer.parseInt(datas[4]);// 挑战次数
+            int serviceId = -1, accountId = -1;
+            ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
+            if (serviceInfo != null) {
+                serviceId = serviceInfo.getServiceId();
+                accountId = serviceInfo.getAccountId();
             }
-            dao.saveDareMapInfoBatch(dareMapInfoList);
-        });
+            DareMapInfo dareMapInfo = new DareMapInfo();
+            dareMapInfo.setMapId(mapId);
+            dareMapInfo.setPlayerId(playerId);
+            dareMapInfo.setServiceId(serviceId);
+            dareMapInfo.setTime(challengeTimes);
+            dareMapInfo.setRecordTime((int) (dataTime / 1000));
+            dareMapInfo.setAction(DareMapInfo.COME_OUT);
+            dareMapInfo.setType(DareMapInfo.SINGLE_MAP);
+            dareMapInfo.setAccountId(accountId);
+            dareMapInfo.setChallengeType(1);
+            dareMapInfoList.add(dareMapInfo);
+        }
+        dao.saveDareMapInfoBatch(dareMapInfoList);
     }
 }

@@ -76,12 +76,11 @@ public class DareSingleMapRDD implements Serializable {
             dao.updatePlayerTopDareSinglemapBatch(playerInfoList1);
             dao.updatePlayerTopDareEliteSinglemapBatch(playerInfoList2);
         });
-        daresingleRDD.foreachPartition(it -> {
+        List<String[]> daresingleList = daresingleRDD.collect();
             BaseDao dao = BaseDao.getInstance();
             List<DareMapInfo> dareMapInfoList = new ArrayList<>();
             List<SinglemapItem> singlemapItemList = new ArrayList<>();
-            while (it.hasNext()) {
-                String[] datas = it.next();
+            for (String [] datas:daresingleList) {
                 long dataTime = Long.parseLong(datas[1]);
                 int playerId = Integer.parseInt(datas[2]);
                 int mapId = Integer.parseInt(datas[3]);
@@ -108,6 +107,6 @@ public class DareSingleMapRDD implements Serializable {
             }
             dao.saveDareMapInfoBatch(dareMapInfoList);
             dao.saveSingleMapItemBatch(singlemapItemList);
-        });
+
     }
 }

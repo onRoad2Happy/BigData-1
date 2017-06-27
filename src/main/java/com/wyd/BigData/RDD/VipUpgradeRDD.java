@@ -16,7 +16,6 @@ public class VipUpgradeRDD implements Serializable {
 
     public void call(JavaRDD<String[]> rdd) {
         JavaRDD<String[]> vipUpgradeRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
-
         if (vipUpgradeRDD.count() == 0)
             return;
         JavaPairRDD<String, Integer> maxLevelRDD = vipUpgradeRDD.mapToPair(datas -> new Tuple2<>(datas[2], Integer.parseInt(datas[3]))).reduceByKey(Math::max);

@@ -1,7 +1,5 @@
 package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.ChatLog;
-import com.wyd.BigData.bean.GuildInfo;
-import com.wyd.BigData.bean.ItemLog;
 import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.DataType;
@@ -11,8 +9,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 public class ChatLogRDD implements Serializable {
     private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_CHATLOG);
     private static final long serialVersionUID = 1773415141825433318L;
@@ -48,7 +44,7 @@ public class ChatLogRDD implements Serializable {
             String tableName = "tab_chatLog",tmpName="tmp_chatLog";
             dataFrame.createOrReplaceTempView(tmpName);
             createTable(spark, tableName);
-            spark.sql("INSERT INTO " + tableName + " select * from "+tmpName);
+            spark.sql("INSERT INTO " + tableName + " select sendTime,sendId,reveId,channel, name, level, vipLevel, message from "+tmpName);
         }
 
     }

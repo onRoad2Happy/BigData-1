@@ -70,7 +70,7 @@ public class ItemLogRDD implements Serializable {
             dataFrame.createOrReplaceTempView("tmp_itemLog");
             String tableName = "tab_itemLog";
             createTable(spark, tableName);
-            spark.sql("INSERT INTO " + tableName + " select * from tmp_itemLog");
+            spark.sql("INSERT INTO " + tableName + " select time ,playerId, itemId, changeOrigin, changeType, changeNum, mainType, subType, useType, getItemId, name, accountId, beforeNum, afterNum from tmp_itemLog");
         }
         //KEY: playerId_itemId  VAL:changeNum
         JavaPairRDD<String, Integer> itemMergeChangeNumRDD = itemRDD.mapToPair(datas -> {
@@ -93,7 +93,7 @@ public class ItemLogRDD implements Serializable {
                 int count = t._2();
                 int playerId = Integer.parseInt(params[0]);
                 String itemId = params[1];
-                PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+                PlayerInfo playerInfo = dao.getPlayerInfo(playerId, false);
                 if (null != playerInfo) {
                     if (itemId.equals("1")) {
                         playerInfo.setDiamond(playerInfo.getDiamond() + count);
@@ -108,30 +108,28 @@ public class ItemLogRDD implements Serializable {
             dao.updatePlayerDiamondInfoBatch(diamondInfoList);
         });
         //update first cost info
-        itemRDD.foreachPartition(it -> {
-            BaseDao dao = BaseDao.getInstance();
-            while (it.hasNext()) {
-                String[] datas = it.next();
-                String itemId = datas[3];
-                if (itemId.equals("1")) {
-                    int playerId = Integer.parseInt(datas[2]);
-                    PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
-                    if (playerInfo != null && playerInfo.getFirstCostTime() == null) {
-                        playerInfo = dao.getPlayerInfo(playerId, false);//从数据库再查一次保证数据准确性
-                        if (playerInfo.getFirstCostTime() == null) {
-                            long dataTime = Long.valueOf(datas[1]);
-                            int changeNum = Integer.parseInt(datas[6]);
-                            int getItemId = datas[10] != null && !datas[10].equals("") && StringUtil.isNumeric(datas[10]) ? Integer.parseInt(datas[10]) : -1;
-                            playerInfo.setFirstCostTime(new Date(dataTime));
-                            playerInfo.setFirstCostLevel(playerInfo.getPlayerLevel());
-                            playerInfo.setFirstCostNum(changeNum);
-                            playerInfo.setFirstCostItem(getItemId);
-                            dao.updatePlayerFirstCostInfo(playerInfo);
-                        }
+        List<String[]> itemLogList = itemRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        for (String[] datas : itemLogList) {
+            String itemId = datas[3];
+            if (itemId.equals("1")) {
+                int playerId = Integer.parseInt(datas[2]);
+                PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+                if (playerInfo != null && playerInfo.getFirstCostTime() == null) {
+                    playerInfo = dao.getPlayerInfo(playerId, false);//从数据库再查一次保证数据准确性
+                    if (playerInfo.getFirstCostTime() == null) {
+                        long dataTime = Long.valueOf(datas[1]);
+                        int changeNum = Integer.parseInt(datas[6]);
+                        int getItemId = datas[10] != null && !datas[10].equals("") && StringUtil.isNumeric(datas[10]) ? Integer.parseInt(datas[10]) : -1;
+                        playerInfo.setFirstCostTime(new Date(dataTime));
+                        playerInfo.setFirstCostLevel(playerInfo.getPlayerLevel());
+                        playerInfo.setFirstCostNum(changeNum);
+                        playerInfo.setFirstCostItem(getItemId);
+                        dao.updatePlayerFirstCostInfo(playerInfo);
                     }
                 }
             }
-        });
+        }
     }
 
     private void createTable(SparkSession spark, String tableName) {

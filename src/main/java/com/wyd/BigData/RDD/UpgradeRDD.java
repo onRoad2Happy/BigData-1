@@ -5,6 +5,7 @@ import com.wyd.BigData.bean.ServiceInfo;
 import com.wyd.BigData.bean.UpgradeInfo;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.DataType;
+import org.apache.log4j.helpers.LogLog;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
@@ -75,7 +76,9 @@ public class UpgradeRDD implements Serializable {
                 beforeLevel.setLevel(playerLevel);
                 beforeLevel.setPlayerCount(-count);
                 dao.savePlayerLevelInfo(beforeLevel);
+                LogLog.warn("level:"+playerLevel+" count:"+(-count));
             } else {
+                LogLog.warn("level:"+playerLevel+" count:"+beforeLevel.getPlayerCount()+"-"+count+"="+(beforeLevel.getPlayerCount()-count));
                 beforeLevel.setPlayerCount(beforeLevel.getPlayerCount() - count);
                 dao.updatePlayerLevelInfo(beforeLevel);
             }
@@ -87,7 +90,9 @@ public class UpgradeRDD implements Serializable {
                 afterLevel.setLevel(playerLevel + 1);
                 afterLevel.setPlayerCount(count);
                 dao.savePlayerLevelInfo(afterLevel);
+                LogLog.warn("level:"+(playerLevel+1)+" count:"+count);
             } else {
+                LogLog.warn("level:"+(playerLevel+1)+" count:"+afterLevel.getPlayerCount()+"+"+count+"="+(afterLevel.getPlayerCount()+count));
                 afterLevel.setPlayerCount(afterLevel.getPlayerCount() + count);
                 dao.updatePlayerLevelInfo(afterLevel);
             }

@@ -13,7 +13,7 @@ public class CreateRDD implements Serializable {
 
     private static final long             serialVersionUID = -758442520627154431L;
     private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_CREATE);
-
+    //BaseRDD
     public void call(JavaRDD<String[]> rdd) {
         JavaRDD<String[]> createRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
 

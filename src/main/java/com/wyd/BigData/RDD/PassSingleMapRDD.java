@@ -118,51 +118,48 @@ public class PassSingleMapRDD implements Serializable {
             dao.updatePlayerTopEliteSinglemapBatch(playerInfoList2);
         });
         //=================end玩家通关end====================
-
-        passSingleRDD.foreachPartition(it -> {
-            BaseDao dao = BaseDao.getInstance();
-            List<DareMapInfo> dareMapInfoList = new ArrayList<>();
-            List<DareMapInfo> actionInfoList = new ArrayList<>();
-            List<SinglemapItem> singlemapItemList = new ArrayList<>();
-            while (it.hasNext()) {
-                String[] datas = it.next();
-                long dataTime = Long.parseLong(datas[1]);
-                int playerId = Integer.parseInt(datas[2]);
-                int mapId = Integer.parseInt(datas[3]);
-                int star = Integer.parseInt(datas[4]);
-                ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
-                DareMapInfo dareMapInfo = dao.getDareMapInfo(serviceInfo.getServiceId(), playerId, mapId, DareMapInfo.COME_IN, dataTime);
-                if (dareMapInfo != null) {
-                    dareMapInfo.setAction(DareMapInfo.COME_OUT);
-                    dareMapInfo.setRecordTime((int) (dataTime / 1000));
-                    actionInfoList.add(dareMapInfo);
-                } else {
-                    dareMapInfo = new DareMapInfo();
-                    dareMapInfo.setMapId(mapId);
-                    dareMapInfo.setPlayerId(playerId);
-                    dareMapInfo.setServiceId(serviceInfo.getServiceId());
-                    dareMapInfo.setTime(1);
-                    dareMapInfo.setRecordTime((int) (dataTime / 1000));
-                    dareMapInfo.setAction(DareMapInfo.COME_OUT);
-                    dareMapInfo.setType(DareMapInfo.SINGLE_MAP);
-                    dareMapInfo.setAccountId(serviceInfo.getAccountId());
-                    dareMapInfo.setChallengeType(0);
-                    dareMapInfoList.add(dareMapInfo);
-                }
-                SinglemapItem item= dao.getLastSinglemapItem(playerId,dataTime);
-                if(item!=null) {
-                    int finishTime = (int) (dataTime / 1000);
-                    if (finishTime >= item.getStartTime()) {
-                        item.setFinishTime(finishTime - item.getStartTime());
-                    }
-                    item.setPassStar(star);
-                    item.setDataTime((int) (dataTime / 1000));
-                    singlemapItemList.add(item);
-                }
+        List<String[]> passSingleLogList = passSingleRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        List<DareMapInfo> dareMapInfoList = new ArrayList<>();
+        List<DareMapInfo> actionInfoList = new ArrayList<>();
+        List<SinglemapItem> singlemapItemList = new ArrayList<>();
+        for (String[] datas : passSingleLogList) {
+            long dataTime = Long.parseLong(datas[1]);
+            int playerId = Integer.parseInt(datas[2]);
+            int mapId = Integer.parseInt(datas[3]);
+            int star = Integer.parseInt(datas[4]);
+            ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
+            DareMapInfo dareMapInfo = dao.getDareMapInfo(serviceInfo.getServiceId(), playerId, mapId, DareMapInfo.COME_IN, dataTime);
+            if (dareMapInfo != null) {
+                dareMapInfo.setAction(DareMapInfo.COME_OUT);
+                dareMapInfo.setRecordTime((int) (dataTime / 1000));
+                actionInfoList.add(dareMapInfo);
+            } else {
+                dareMapInfo = new DareMapInfo();
+                dareMapInfo.setMapId(mapId);
+                dareMapInfo.setPlayerId(playerId);
+                dareMapInfo.setServiceId(serviceInfo.getServiceId());
+                dareMapInfo.setTime(1);
+                dareMapInfo.setRecordTime((int) (dataTime / 1000));
+                dareMapInfo.setAction(DareMapInfo.COME_OUT);
+                dareMapInfo.setType(DareMapInfo.SINGLE_MAP);
+                dareMapInfo.setAccountId(serviceInfo.getAccountId());
+                dareMapInfo.setChallengeType(0);
+                dareMapInfoList.add(dareMapInfo);
             }
-            dao.saveDareMapInfoBatch(dareMapInfoList);
-            dao.updateSinglemapItemBatch(singlemapItemList);
-            dao.updateDareMapActionBath(actionInfoList);
-        });
+            SinglemapItem item = dao.getLastSinglemapItem(playerId, dataTime);
+            if (item != null) {
+                int finishTime = (int) (dataTime / 1000);
+                if (finishTime >= item.getStartTime()) {
+                    item.setFinishTime(finishTime - item.getStartTime());
+                }
+                item.setPassStar(star);
+                item.setDataTime((int) (dataTime / 1000));
+                singlemapItemList.add(item);
+            }
+        }
+        dao.saveDareMapInfoBatch(dareMapInfoList);
+        dao.updateSinglemapItemBatch(singlemapItemList);
+        dao.updateDareMapActionBath(actionInfoList);
     }
 }

@@ -23,11 +23,10 @@ public class LoginRDD implements Serializable {
      */
     private static final long             serialVersionUID = -758442520627154431L;
     private static       SimpleDateFormat sf               = new SimpleDateFormat("yyyy_MM_dd");
-    private static final String DATATYPE         = String.valueOf(DataType.MARKNUM_LOGIN);
+    private static final String           DATATYPE         = String.valueOf(DataType.MARKNUM_LOGIN);
 
     public void call(JavaRDD<String[]> rdd) {
         JavaRDD<String[]> loginRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
-
         // 数据源去重
         JavaRDD<Row> loginRowRDD = loginRDD.map(parts -> {
             String day = sf.format(new Date(Long.parseLong(parts[1])));
@@ -88,58 +87,55 @@ public class LoginRDD implements Serializable {
             }
         }
         //更新playerInfo,loginInfo
-        loginRDD.foreachPartition(lines -> {
-            BaseDao dao = BaseDao.getInstance();
-            List<PlayerInfo> playerInfoList = new ArrayList<>();
-            List<LoginInfo> loginInfoList = new ArrayList<>();
-            while (lines.hasNext()) {
-                String[] datas = lines.next();
-                int playerId = Integer.parseInt(datas[5]);
-                PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
-                if (playerInfo == null) {
-                    continue;
-                }
-                Date dataTime = new Date(Long.parseLong(datas[1]));
-                playerInfo.setLoginTime(dataTime);
-                playerInfo.setLoginNum(playerInfo.getLoginNum() + 1);
-                LoginInfo login = new LoginInfo();
-                login.setServiceId(Integer.parseInt(datas[2]));
-                login.setChannelId(Integer.parseInt(datas[3]));
-                login.setAccountId(Integer.parseInt(datas[4]));
-                login.setPlayerId(Integer.parseInt(datas[5]));
-                login.setDeviceMac(StringUtil.filterOffUtf8Mb4(datas[6]));
-                login.setDeviceName(StringUtil.filterOffUtf8Mb4(datas[7]));
-                login.setSystemName(StringUtil.filterOffUtf8Mb4(datas[8]));
-                login.setPlayerChannel(playerInfo.getChannelId());
-                if (datas.length > 9) {
-                    login.setSystemVersion(datas[9]);
-                    login.setAppVersion(datas[10]);
-                }
-                login.setLoginTime(dataTime);
-                if (datas.length > 11) {
-                    login.setLoginIp(datas[11]);
-                }
-                if (datas.length > 12) {
-                    int diamond = Integer.parseInt(datas[12]), gold = Integer.parseInt(datas[13]), vigor = Integer.parseInt(datas[14]);
-                    login.setDiamond(diamond);
-                    login.setGold(gold);
-                    login.setVigor(vigor);
-                    playerInfo.setDiamond(diamond);
-                    playerInfo.setGold(gold);
-                    playerInfo.setVigor(vigor);
-                }
-                login.setPlayerLevel(playerInfo.getPlayerLevel());
-                login.setPlayerName(playerInfo.getPlayerName());
-                AccountInfo accountInfo = dao.getAccountInfo(Integer.parseInt(datas[4]));
-                if (accountInfo != null) {
-                    login.setAccountName(accountInfo.getAccountName());
-                }
-                playerInfoList.add(playerInfo);
-                loginInfoList.add(login);
+        List<String[]> loginLogList = loginRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        List<PlayerInfo> playerInfoList = new ArrayList<>();
+        List<LoginInfo> loginInfoList = new ArrayList<>();
+        for (String[] datas : loginLogList) {
+            int playerId = Integer.parseInt(datas[5]);
+            PlayerInfo playerInfo = dao.getPlayerInfo(playerId);
+            if (playerInfo == null) {
+                continue;
             }
-            dao.updatePlayerLoginInfoBatch(playerInfoList);
-            dao.saveLoginInfoBatch(loginInfoList);
-        });
+            Date dataTime = new Date(Long.parseLong(datas[1]));
+            playerInfo.setLoginTime(dataTime);
+            playerInfo.setLoginNum(playerInfo.getLoginNum() + 1);
+            LoginInfo login = new LoginInfo();
+            login.setServiceId(Integer.parseInt(datas[2]));
+            login.setChannelId(Integer.parseInt(datas[3]));
+            login.setAccountId(Integer.parseInt(datas[4]));
+            login.setPlayerId(Integer.parseInt(datas[5]));
+            login.setDeviceMac(StringUtil.filterOffUtf8Mb4(datas[6]));
+            login.setDeviceName(StringUtil.filterOffUtf8Mb4(datas[7]));
+            login.setSystemName(StringUtil.filterOffUtf8Mb4(datas[8]));
+            login.setPlayerChannel(playerInfo.getChannelId());
+            if (datas.length > 9) {
+                login.setSystemVersion(datas[9]);
+                login.setAppVersion(datas[10]);
+            }
+            login.setLoginTime(dataTime);
+            if (datas.length > 11) {
+                login.setLoginIp(datas[11]);
+            }
+            if (datas.length > 12) {
+                int diamond = Integer.parseInt(datas[12]), gold = Integer.parseInt(datas[13]), vigor = Integer.parseInt(datas[14]);
+                login.setDiamond(diamond);
+                login.setGold(gold);
+                login.setVigor(vigor);
+                playerInfo.setDiamond(diamond);
+                playerInfo.setGold(gold);
+                playerInfo.setVigor(vigor);
+            }
+            login.setPlayerLevel(playerInfo.getPlayerLevel());
+            login.setPlayerName(playerInfo.getPlayerName());
+            AccountInfo accountInfo = dao.getAccountInfo(Integer.parseInt(datas[4]));
+            if (accountInfo != null) {
+                login.setAccountName(accountInfo.getAccountName());
+            }
+            playerInfoList.add(playerInfo);
+            loginInfoList.add(login);
+        }
+        dao.updatePlayerLoginInfoBatch(playerInfoList);
+        dao.saveLoginInfoBatch(loginInfoList);
     }
-
 }

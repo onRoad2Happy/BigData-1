@@ -85,29 +85,27 @@ public class TeammapLotteryRDD implements Serializable {
             dao.saveTeammapInfoBatch(savelist);
             dao.updateTeammapInfoBath2(updatelist);
         });
-        teammapLotteryRDD.foreachPartition(it -> {
-            BaseDao dao = BaseDao.getInstance();
-            List<TeammapLottery> teammapLotteryList = new ArrayList<>();
-            while (it.hasNext()) {
-                String[] datas = it.next();
-                int serviceId = -1;
-                long dataTime = Long.parseLong(datas[1]);
-                int playerId = Integer.parseInt(datas[2]);
-                int sectionId = Integer.parseInt(datas[3]);
-                int difficulty = Integer.parseInt(datas[4]);
-                int deplete = Integer.parseInt(datas[5]);
-                ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
-                serviceId = serviceInfo != null ? serviceInfo.getServiceId() : -1;
-                TeammapLottery lottery = new TeammapLottery();
-                lottery.setServiceId(serviceId);
-                lottery.setPlayerId(playerId);
-                lottery.setSectionId(sectionId);
-                lottery.setDifficulty(difficulty);
-                lottery.setDeplete(deplete);
-                lottery.setDataTime(dataTime);
-                teammapLotteryList.add(lottery);
-            }
-            dao.saveTeammapLotteryBatch(teammapLotteryList);
-        });
+        List<String[]> teammapLogList = teammapLotteryRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        List<TeammapLottery> teammapLotteryList = new ArrayList<>();
+        for (String[] datas : teammapLogList) {
+            int serviceId = -1;
+            long dataTime = Long.parseLong(datas[1]);
+            int playerId = Integer.parseInt(datas[2]);
+            int sectionId = Integer.parseInt(datas[3]);
+            int difficulty = Integer.parseInt(datas[4]);
+            int deplete = Integer.parseInt(datas[5]);
+            ServiceInfo serviceInfo = dao.getServiceInfo(playerId);
+            serviceId = serviceInfo != null ? serviceInfo.getServiceId() : -1;
+            TeammapLottery lottery = new TeammapLottery();
+            lottery.setServiceId(serviceId);
+            lottery.setPlayerId(playerId);
+            lottery.setSectionId(sectionId);
+            lottery.setDifficulty(difficulty);
+            lottery.setDeplete(deplete);
+            lottery.setDataTime(dataTime);
+            teammapLotteryList.add(lottery);
+        }
+        dao.saveTeammapLotteryBatch(teammapLotteryList);
     }
 }

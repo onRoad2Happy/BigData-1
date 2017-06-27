@@ -19,26 +19,6 @@ public class MarryRDD implements Serializable {
         JavaRDD<String[]> marryRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
         if (marryRDD.count() == 0)
             return;
-        marryRDD.foreachPartition(it -> {
-            BaseDao dao = BaseDao.getInstance();
-            List<PlayerInfo> playerInfoList = new ArrayList<>();
-            while (it.hasNext()) {
-                String[] datas = it.next();
-                int groomId = Integer.parseInt(datas[2]);
-                int brideId = Integer.parseInt(datas[3]);
-                PlayerInfo groomInfo = dao.getPlayerInfo(groomId);
-                if (groomInfo != null) {
-                    groomInfo.setMateId(brideId);
-                    playerInfoList.add(groomInfo);
-                }
-                PlayerInfo brideInfo = dao.getPlayerInfo(brideId);
-                if (brideInfo != null) {
-                    brideInfo.setMateId(groomId);
-                    playerInfoList.add(brideInfo);
-                }
-            }
-            dao.updatePlayerMarryInfoBatch(playerInfoList);
-        });
         //KEY:serviceId_marryMark VAL:[1,marryType1,marryType2,marryType3,marryType4]
         JavaPairRDD<String, Integer[]> counts = marryRDD.mapToPair(datas -> {
             BaseDao dao = BaseDao.getInstance();
@@ -90,7 +70,7 @@ public class MarryRDD implements Serializable {
                         marryInfo.setGeneralNum(marryType4);
                         dao.saveMarryInfo(marryInfo);
                     }
-                    marryInfo.setMarryNum(marryInfo.getMarryNum()+count);
+                    marryInfo.setMarryNum(marryInfo.getMarryNum() + count);
                     marryInfo.setLuxuriousNum(marryInfo.getLuxuriousNum() + marryType1);
                     marryInfo.setLuxuryNum(marryInfo.getLuxuryNum() + marryType2);
                     marryInfo.setRomanticNum(marryInfo.getRomanticNum() + marryType3);
@@ -100,5 +80,23 @@ public class MarryRDD implements Serializable {
             }
             dao.updateMarryInfoBath(list, 0);
         });
+        List<String[]> marryLogList = marryRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        List<PlayerInfo> playerInfoList = new ArrayList<>();
+        for (String[] datas : marryLogList) {
+            int groomId = Integer.parseInt(datas[2]);
+            int brideId = Integer.parseInt(datas[3]);
+            PlayerInfo groomInfo = dao.getPlayerInfo(groomId);
+            if (groomInfo != null) {
+                groomInfo.setMateId(brideId);
+                playerInfoList.add(groomInfo);
+            }
+            PlayerInfo brideInfo = dao.getPlayerInfo(brideId);
+            if (brideInfo != null) {
+                brideInfo.setMateId(groomId);
+                playerInfoList.add(brideInfo);
+            }
+        }
+        dao.updatePlayerMarryInfoBatch(playerInfoList);
     }
 }

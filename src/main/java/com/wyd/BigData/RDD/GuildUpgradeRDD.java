@@ -15,7 +15,6 @@ public class GuildUpgradeRDD implements Serializable {
 
     public void call(JavaRDD<String[]> rdd) {
         JavaRDD<String[]> upgradeRDD = rdd.filter(parts -> parts.length > 2 && DATATYPE.equals(parts[0]));
-
         if (upgradeRDD.count() == 0)
             return;
         JavaPairRDD<String, Integer> maxLevelRDD = upgradeRDD.mapToPair(datas -> new Tuple2<>(datas[2], Integer.parseInt(datas[3]))).reduceByKey(Math::max);

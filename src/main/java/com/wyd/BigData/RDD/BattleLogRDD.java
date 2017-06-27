@@ -1,7 +1,5 @@
 package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.BattleInfo;
-import com.wyd.BigData.bean.GuildInfo;
-import com.wyd.BigData.bean.PlayerInfo;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.DataType;
 import org.apache.spark.api.java.JavaPairRDD;
