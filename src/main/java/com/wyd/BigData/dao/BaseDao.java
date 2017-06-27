@@ -1016,15 +1016,11 @@ public class BaseDao implements Serializable {
         jdbcw.doBatch("insert into tab_battle_info (`service_id`,`create_time`,`battle_mode`,`battle_channel`,`is_battle_mull`,`is_robot`,`player_num`,`total_time`,`battle_count`) values (?,?,?,?,?,?,?,?,?)", paramsList);
     }
     public void saveUpgradeInfo(UpgradeInfo info) {
-        List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { info.getServiceId(), info.getPlayerLevel(), info.getTotalTime(), info.getTotalCount() });
-        jdbcw.doBatch("insert into tab_upgrade_info (`service_id`,`player_level`,`total_time`,`total_count`) values (?,?,?,?)", paramsList);
+        jdbcw.executeSQL("insert into tab_upgrade_info (`service_id`,`player_level`,`total_time`,`total_count`) values (?,?,?,?)", new Object[] { info.getServiceId(), info.getPlayerLevel(), info.getTotalTime(), info.getTotalCount() });
     }
 
     public void savePlayerLevelInfo(PlayerLevelInfo info) {
-        List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { info.getServiceId(), info.getChannelId(), info.getLevel(), info.getPlayerCount() });
-        jdbcw.doBatch("insert into tab_player_level_info (`service_id`,`channel_id`,`level`,`player_count`) values (?,?,?,?)", paramsList);
+        jdbcw.executeSQL("insert into tab_player_level_info (`service_id`,`channel_id`,`level`,`player_count`) values (?,?,?,?)", new Object[] { info.getServiceId(), info.getChannelId(), info.getLevel(), info.getPlayerCount() });
     }
 
     /**
@@ -1053,9 +1049,7 @@ public class BaseDao implements Serializable {
     }
 
     public void saveGuildInfo(GuildInfo info) {
-        List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { info.getGuildId(), info.getServiceId(), info.getGuildLevel(), info.getGuildNum() });
-        jdbcw.doBatch("insert into tab_guild_info (`guild_id`,`service_id`,`guild_level`,`guild_num`) values (?,?,?,?)", paramsList);
+        jdbcw.executeSQL("insert into tab_guild_info (`guild_id`,`service_id`,`guild_level`,`guild_num`) values (?,?,?,?)", new Object[] { info.getGuildId(), info.getServiceId(), info.getGuildLevel(), info.getGuildNum() });
     }
 
     public void updateVipLevelBatch(List<PlayerInfo> playerInfoList) {
@@ -1136,17 +1130,13 @@ public class BaseDao implements Serializable {
     }
 
     public void updatePlayerFirstCostInfo(PlayerInfo playerInfo) {
-        List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { playerInfo.getFirstCostTime(), playerInfo.getFirstCostLevel(), playerInfo.getFirstCostNum(), playerInfo.getFirstCostItem(), playerInfo.getId() });
         playerInfoMap.put(playerInfo.getPlayerId(), playerInfo);
-        jdbcw.doBatch("update tab_player_info set first_cost_time=?,first_cost_level=?,first_cost_num=?,first_cost_item=? where id=?", paramsList);
+        jdbcw.executeSQL("update tab_player_info set first_cost_time=?,first_cost_level=?,first_cost_num=?,first_cost_item=? where id=?", new Object[] { playerInfo.getFirstCostTime(), playerInfo.getFirstCostLevel(), playerInfo.getFirstCostNum(), playerInfo.getFirstCostItem(), playerInfo.getId() });
     }
 
     public void updatePlayerTeammap(PlayerInfo playerInfo) {
-        List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { playerInfo.getTeammapNum(), playerInfo.getId() });
         playerInfoMap.put(playerInfo.getPlayerId(), playerInfo);
-        jdbcw.doBatch("update tab_player_info set teammap_num=? where id=?", paramsList);
+        jdbcw.executeSQL("update tab_player_info set teammap_num=? where id=?", new Object[] { playerInfo.getTeammapNum(), playerInfo.getId() });
     }
 
     public void updatePlayerGuildInfoBatch(List<PlayerInfo> playerInfoList) {
@@ -1237,9 +1227,7 @@ public class BaseDao implements Serializable {
     }
 
     public void updatePlayerLevelInfo(PlayerLevelInfo info) {
-        List<Object[]> paramsList = new ArrayList<>();
-        paramsList.add(new Object[] { info.getPlayerCount(), info.getId() });
-        jdbcw.doBatch("update tab_player_level_info set `player_count`=? where id=?", paramsList);
+        jdbcw.executeSQL("update tab_player_level_info set `player_count`=? where id=?", new Object[] { info.getPlayerCount(), info.getId() });
     }
 
     private void createSingleMapItem(String today) {

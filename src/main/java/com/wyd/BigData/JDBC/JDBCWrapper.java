@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import com.wyd.BigData.Global;
+import org.apache.log4j.helpers.LogLog;
 public class JDBCWrapper implements Serializable {
     /**
      *
@@ -68,7 +69,38 @@ public class JDBCWrapper implements Serializable {
         }
         return conn;
     }
-
+    public void executeSQL(String sql,Object[] params) {
+        Connection conn = null;
+        PreparedStatement statement = null;
+        try {
+            conn = getConnection();
+            statement = conn.prepareStatement(sql);
+            for (int z = 0; z < params.length; z++) {
+                statement.setObject(z + 1, params[z]);
+            }
+            statement.execute();
+        } catch (Exception e) {
+            LogLog.error(e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    LogLog.error(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            if (conn != null) {
+                try {
+                    connPool.put(conn);
+                } catch (InterruptedException e) {
+                    LogLog.error(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
     public void executeSQL(String sql) {
         Connection conn = null;
         PreparedStatement statement = null;
@@ -77,12 +109,14 @@ public class JDBCWrapper implements Serializable {
             statement = conn.prepareStatement(sql);
             statement.execute();
         } catch (Exception e) {
+            LogLog.error(e.getMessage());
             e.printStackTrace();
         } finally {
             if (statement != null) {
                 try {
                     statement.close();
                 } catch (SQLException e) {
+                    LogLog.error(e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -90,6 +124,7 @@ public class JDBCWrapper implements Serializable {
                 try {
                     connPool.put(conn);
                 } catch (InterruptedException e) {
+                    LogLog.error(e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -121,14 +156,15 @@ public class JDBCWrapper implements Serializable {
                 statement.executeBatch();
                 conn.commit();// 提交事务
             }
-            conn.commit();
         } catch (Exception e) {
+            LogLog.error(e.getMessage());
             e.printStackTrace();
         } finally {
             if (statement != null) {
                 try {
                     statement.close();
                 } catch (SQLException e) {
+                    LogLog.error(e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -136,6 +172,7 @@ public class JDBCWrapper implements Serializable {
                 try {
                     connPool.put(conn);
                 } catch (InterruptedException e) {
+                    LogLog.error(e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -161,12 +198,14 @@ public class JDBCWrapper implements Serializable {
             }
             callBack.call(statement.executeQuery());
         } catch (Exception e) {
+            LogLog.error(e.getMessage());
             e.printStackTrace();
         } finally {
             if (statement != null) {
                 try {
                     statement.close();
                 } catch (SQLException e) {
+                    LogLog.error(e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -174,6 +213,7 @@ public class JDBCWrapper implements Serializable {
                 try {
                     connPool.put(conn);
                 } catch (InterruptedException e) {
+                    LogLog.error(e.getMessage());
                     e.printStackTrace();
                 }
             }
