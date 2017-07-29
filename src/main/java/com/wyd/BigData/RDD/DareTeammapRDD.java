@@ -2,7 +2,6 @@ package com.wyd.BigData.RDD;
 import com.wyd.BigData.bean.*;
 import com.wyd.BigData.dao.BaseDao;
 import com.wyd.BigData.util.DataType;
-import kafka.controller.LeaderIsrAndControllerEpoch;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
@@ -165,51 +164,7 @@ public class DareTeammapRDD implements Serializable {
             }
             return list.iterator();
         });
-        //保存玩家战斗数据
-        playerTeammapRDD.foreachPartition(it -> {
-            BaseDao dao = BaseDao.getInstance();
-            List<DareMapInfo> dareMapInfoList = new ArrayList<>();
-            List<TeammapItem> teammapItemList = new ArrayList<>();
-            while (it.hasNext()) {
-                String[] datas = it.next();
-                int playerId = Integer.parseInt(datas[0]);
-                int sectionId = Integer.parseInt(datas[1]);
-                int difficulty = Integer.parseInt(datas[2]);
-                int isWin = Integer.parseInt(datas[3]);
-                int pileTime = Integer.parseInt(datas[4]);
-                long dataTime = Long.parseLong(datas[5]);
-                int playerSize = Integer.parseInt(datas[6]);
-                PlayerInfo playerInfo = dao.getPlayerInfo(playerId,false);
-                if (playerInfo == null)
-                    continue;
-                DareMapInfo dareMapInfo = new DareMapInfo();
-                dareMapInfo.setAction(isWin == 1 ? DareMapInfo.COME_OUT : DareMapInfo.COME_IN);
-                dareMapInfo.setMapId(sectionId);
-                dareMapInfo.setPlayerId(playerId);
-                dareMapInfo.setDifficult(difficulty);
-                dareMapInfo.setServiceId(playerInfo.getServiceId());
-                dareMapInfo.setTime(1);
-                dareMapInfo.setRecordTime((int) (dataTime / 1000));
-                dareMapInfo.setType(DareMapInfo.TEAM_MAP);
-                dareMapInfo.setAccountId(playerInfo.getAccountId());
-                dareMapInfo.setChallengeType(0);
-                dareMapInfoList.add(dareMapInfo);
-                TeammapItem item = new TeammapItem();
-                item.setServiceId(playerInfo.getServiceId());
-                item.setPlayerId(playerId);
-                item.setPlayerNum(playerSize);
-                item.setMapId(sectionId);
-                item.setDifficulty(difficulty);
-                item.setStartTime((int) (dataTime / 1000));
-                item.setFinishTime(pileTime);
-                item.setIsWin(isWin);
-                teammapItemList.add(item);
-                playerInfo.setTeammapNum(playerInfo.getTeammapNum() + 1);
-                dao.updatePlayerTeammap(playerInfo);
-            }
-            dao.saveTeammapItemBatch(teammapItemList);
-            dao.saveDareMapInfoBatch(dareMapInfoList);
-        });
+
         //KEY:playerId_sectionId VAL:PlayerTeammap
         JavaPairRDD<String, PlayerTeammap> playerTeammapCounts = playerTeammapRDD.mapToPair(datas -> {
             PlayerTeammap playerTeammap = new PlayerTeammap();
@@ -257,7 +212,6 @@ public class DareTeammapRDD implements Serializable {
                 Tuple2<String, PlayerTeammap> t = it.next();
                 String[] params = t._1().split("_");
                 PlayerTeammap info = t._2();
-                int serviceId = -1;
                 int playerId = Integer.parseInt(params[0]);
                 int sectionId = Integer.parseInt(params[1]);
                 PlayerTeammap playerTeammap = dao.getPlayerTeammap(playerId, sectionId);
@@ -280,5 +234,48 @@ public class DareTeammapRDD implements Serializable {
             dao.savePlayerTeammapBatch(saveList);
             dao.updatePlayerTeammapBath(updateList);
         });
+        //保存玩家战斗数据
+        List<String[]> playerTeammapLogList =playerTeammapRDD.collect();
+        BaseDao dao = BaseDao.getInstance();
+        List<DareMapInfo> dareMapInfoList = new ArrayList<>();
+        List<TeammapItem> teammapItemList = new ArrayList<>();
+        for(String[] datas:playerTeammapLogList){
+            int playerId = Integer.parseInt(datas[0]);
+            int sectionId = Integer.parseInt(datas[1]);
+            int difficulty = Integer.parseInt(datas[2]);
+            int isWin = Integer.parseInt(datas[3]);
+            int pileTime = Integer.parseInt(datas[4]);
+            long dataTime = Long.parseLong(datas[5]);
+            int playerSize = Integer.parseInt(datas[6]);
+            PlayerInfo playerInfo = dao.getPlayerInfo(playerId,false);
+            if (playerInfo == null)
+                continue;
+            DareMapInfo dareMapInfo = new DareMapInfo();
+            dareMapInfo.setAction(isWin == 1 ? DareMapInfo.COME_OUT : DareMapInfo.COME_IN);
+            dareMapInfo.setMapId(sectionId);
+            dareMapInfo.setPlayerId(playerId);
+            dareMapInfo.setDifficult(difficulty);
+            dareMapInfo.setServiceId(playerInfo.getServiceId());
+            dareMapInfo.setTime(1);
+            dareMapInfo.setRecordTime((int) (dataTime / 1000));
+            dareMapInfo.setType(DareMapInfo.TEAM_MAP);
+            dareMapInfo.setAccountId(playerInfo.getAccountId());
+            dareMapInfo.setChallengeType(0);
+            dareMapInfoList.add(dareMapInfo);
+            TeammapItem item = new TeammapItem();
+            item.setServiceId(playerInfo.getServiceId());
+            item.setPlayerId(playerId);
+            item.setPlayerNum(playerSize);
+            item.setMapId(sectionId);
+            item.setDifficulty(difficulty);
+            item.setStartTime((int) (dataTime / 1000));
+            item.setFinishTime(pileTime);
+            item.setIsWin(isWin);
+            teammapItemList.add(item);
+            playerInfo.setTeammapNum(playerInfo.getTeammapNum() + 1);
+            dao.updatePlayerTeammap(playerInfo);
+        }
+        dao.saveTeammapItemBatch(teammapItemList);
+        dao.saveDareMapInfoBatch(dareMapInfoList);
     }
 }

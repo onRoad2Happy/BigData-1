@@ -67,6 +67,7 @@ public class JDBCWrapper implements Serializable {
         if (conn == null) {
             throw new Exception("cant't get any connection! connCount(" + connCount + ") ");
         }
+        conn.setAutoCommit(true);
         return conn;
     }
     public void executeSQL(String sql,Object[] params) {
